@@ -16,6 +16,7 @@ import com.example.mysimpleapp.viewmodels.SettingsViewModel
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
+    onThemeChange: () -> Unit,
     viewModel: SettingsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -31,6 +32,15 @@ fun SettingsScreen(
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 24.dp)
+        )
+
+        CommonButton(
+            text = "Сменить тему",
+            onClick = onThemeChange,
+            type = ButtonType.Secondary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
         )
 
         CommonButton(

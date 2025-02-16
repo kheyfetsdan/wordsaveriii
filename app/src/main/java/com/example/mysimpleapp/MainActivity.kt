@@ -18,24 +18,31 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
+import com.example.mysimpleapp.components.ButtonType
+import com.example.mysimpleapp.components.CommonButton
 import com.example.mysimpleapp.screens.InputScreen
 import com.example.mysimpleapp.screens.RandomWordScreen
 import com.example.mysimpleapp.screens.InfoScreen
 import com.example.mysimpleapp.screens.DictionaryScreen
 import com.example.mysimpleapp.ui.theme.MySimpleAppTheme
 import com.example.mysimpleapp.data.TextEntity
+import com.example.mysimpleapp.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MySimpleAppTheme {
+            var currentTheme by remember { mutableStateOf(AppTheme.MINT) }
+            
+            MySimpleAppTheme(appTheme = currentTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    MainScreen(
+                        onThemeChange = { currentTheme = if (currentTheme == AppTheme.MINT) AppTheme.GREY else AppTheme.MINT }
+                    )
                 }
             }
         }
@@ -50,7 +57,7 @@ enum class Screen(val icon: ImageVector, val label: String) {
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(onThemeChange: () -> Unit) {
     var currentScreen by remember { mutableStateOf(Screen.Input) }
     
     var dictionaryWords by remember { mutableStateOf<List<TextEntity>>(emptyList()) }
@@ -103,7 +110,7 @@ fun MainScreen() {
             when (currentScreen) {
                 Screen.Input -> InputScreen()
                 Screen.Random -> RandomWordScreen()
-                Screen.Info -> InfoScreen()
+                Screen.Info -> InfoScreen(onThemeChange = onThemeChange)
                 Screen.Dictionary -> DictionaryScreen(
                     words = dictionaryWords,
                     isTableVisible = isDictionaryTableVisible,

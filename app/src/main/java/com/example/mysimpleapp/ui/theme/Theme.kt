@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val LightColorScheme = lightColorScheme(
+private val MintLightColorScheme = lightColorScheme(
     primary = Color(0xFF006C5D),          // Основной мятный
     onPrimary = Color.White,
     primaryContainer = Color(0xFF74F8DC),  // Светло-мятный контейнер
@@ -34,7 +34,7 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = Color(0xFF3F4946)   // Текст на варианте
 )
 
-private val DarkColorScheme = darkColorScheme(
+private val MintDarkColorScheme = darkColorScheme(
     primary = Color(0xFF53DBc0),          // Мятный для тёмной темы
     onPrimary = Color(0xFF003730),
     primaryContainer = Color(0xFF005045),  // Тёмно-мятный контейнер
@@ -53,14 +53,61 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = Color(0xFFBFC9C5)   // Текст на варианте
 )
 
+private val GreyLightColorScheme = lightColorScheme(
+    primary = Color(0xFF1A1A1A),          // Почти чёрный
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFF404040),  // Тёмно-серый контейнер
+    onPrimaryContainer = Color.White,
+    secondary = Color(0xFF505050),         // Серый
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFE8E8E8), // Светло-серый
+    onSecondaryContainer = Color(0xFF0A0A0A), // Чёрный
+    tertiary = Color(0xFF707070),          // Средне-серый
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFF8F8F8), // Почти белый
+    onTertiaryContainer = Color(0xFF0A0A0A), // Чёрный
+    surface = Color(0xFFFFFFFF),           // Белый фон
+    onSurface = Color(0xFF0A0A0A),         // Чёрный текст
+    surfaceVariant = Color(0xFFF0F0F0),    // Светло-серый вариант
+    onSurfaceVariant = Color(0xFF202020)   // Тёмно-серый текст
+)
+
+private val GreyDarkColorScheme = darkColorScheme(
+    primary = Color(0xFFE0E0E0),          // Светло-серый
+    onPrimary = Color(0xFF0A0A0A),        // Чёрный
+    primaryContainer = Color(0xFF404040),  // Тёмно-серый контейнер
+    onPrimaryContainer = Color.White,
+    secondary = Color(0xFFA0A0A0),         // Средне-серый
+    onSecondary = Color(0xFF0A0A0A),
+    secondaryContainer = Color(0xFF202020), // Очень тёмно-серый
+    onSecondaryContainer = Color.White,
+    tertiary = Color(0xFFD0D0D0),          // Светло-серый
+    onTertiary = Color(0xFF0A0A0A),
+    tertiaryContainer = Color(0xFF404040), // Тёмно-серый
+    onTertiaryContainer = Color.White,
+    surface = Color(0xFF0A0A0A),           // Чёрный
+    onSurface = Color.White,
+    surfaceVariant = Color(0xFF202020),    // Очень тёмно-серый
+    onSurfaceVariant = Color(0xFFE0E0E0)   // Светло-серый текст
+)
+
+enum class AppTheme {
+    MINT,
+    GREY
+}
+
 @Composable
 fun MySimpleAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    appTheme: AppTheme = AppTheme.MINT,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    val view = LocalView.current
+    val colorScheme = when (appTheme) {
+        AppTheme.MINT -> if (darkTheme) MintDarkColorScheme else MintLightColorScheme
+        AppTheme.GREY -> if (darkTheme) GreyDarkColorScheme else GreyLightColorScheme
+    }
     
+    val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window

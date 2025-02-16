@@ -15,12 +15,16 @@ import com.example.mysimpleapp.viewmodels.InfoViewModel
 
 @Composable
 fun InfoScreen(
+    onThemeChange: () -> Unit,
     viewModel: InfoViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
     if (uiState.showSettings) {
-        SettingsScreen(onBackClick = { viewModel.hideSettings() })
+        SettingsScreen(
+            onBackClick = { viewModel.hideSettings() },
+            onThemeChange = onThemeChange
+        )
     } else {
         Column(
             modifier = Modifier
