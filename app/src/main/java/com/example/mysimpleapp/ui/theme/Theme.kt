@@ -34,7 +34,6 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = Color(0xFF3F4946)   // Текст на варианте
 )
 
-
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF53DBc0),          // Мятный для тёмной темы
     onPrimary = Color(0xFF003730),
