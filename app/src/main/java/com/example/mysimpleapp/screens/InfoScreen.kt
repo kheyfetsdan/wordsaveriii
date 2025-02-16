@@ -1,0 +1,67 @@
+package com.example.mysimpleapp.screens
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mysimpleapp.components.CommonButton
+import com.example.mysimpleapp.components.ButtonType
+import com.example.mysimpleapp.viewmodels.InfoViewModel
+
+@Composable
+fun InfoScreen(
+    viewModel: InfoViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    if (uiState.showSettings) {
+        SettingsScreen(onBackClick = { viewModel.hideSettings() })
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Количество слов в базе:",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            Text(
+                text = uiState.wordsCount.toString(),
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+
+            Text(
+                text = uiState.appVersion,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            Text(
+                text = uiState.appAuthor,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+
+            CommonButton(
+                text = "Настройки",
+                onClick = { viewModel.showSettings() },
+                type = ButtonType.Primary,
+                modifier = Modifier.fillMaxWidth(0.8f)
+            )
+        }
+    }
+} 
