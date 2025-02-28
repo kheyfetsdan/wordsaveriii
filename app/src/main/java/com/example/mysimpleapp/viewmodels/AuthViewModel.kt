@@ -54,6 +54,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    fun login(email: String, password: String) {
+        _uiState.value = _uiState.value.copy(
+            email = email,
+            password = password
+        )
+        login()
+    }
+
     fun login() {
         viewModelScope.launch {
             val user = database.userDao().getUser(
