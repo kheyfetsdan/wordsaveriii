@@ -7,251 +7,200 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.mysimpleapp.components.CommonButton
 import com.example.mysimpleapp.components.ButtonType
 import com.example.mysimpleapp.components.CommonCard
-import com.example.mysimpleapp.components.CommonTextField
-import com.example.mysimpleapp.data.AppDatabase
-import com.example.mysimpleapp.data.TextEntity
-import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mysimpleapp.viewmodels.DictionaryViewModel
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import com.example.mysimpleapp.components.CommonTextField
 
 @Composable
 fun DictionaryScreen(
-    words: List<TextEntity>,
-    isTableVisible: Boolean,
-    currentPage: Int,
-    totalPages: Int,
-    onWordsChange: (List<TextEntity>) -> Unit,
-    onTableVisibilityChange: (Boolean) -> Unit,
-    onCurrentPageChange: (Int) -> Unit,
-    onTotalPagesChange: (Int) -> Unit
+    viewModel: DictionaryViewModel = viewModel()
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val database = remember { AppDatabase.getDatabase(context) }
-    val pageSize = 5
-    var searchQuery by remember { mutableStateOf("") }
-    var sortBy by remember { mutableStateOf("text_asc") }
-    var sortDirection by remember { mutableStateOf(true) } // true = asc, false = desc
-
-    LaunchedEffect(currentPage, searchQuery, sortBy) {
-        scope.launch {
-            val total = if (searchQuery.isBlank()) {
-                database.textDao().getWordsCount()
-            } else {
-                database.textDao().getSearchWordsCount(searchQuery)
-            }
-            onTotalPagesChange((total + pageSize - 1) / pageSize)
-            
-            val pagedWords = if (searchQuery.isBlank()) {
-                database.textDao().getPagedWordsSorted(sortBy, pageSize, currentPage * pageSize)
-            } else {
-                database.textDao().searchWordsSorted(searchQuery, sortBy, pageSize, currentPage * pageSize)
-            }
-            onWordsChange(pagedWords)
-        }
-    }
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         CommonTextField(
-            value = searchQuery,
-            onValueChange = { 
-                searchQuery = it
-                onCurrentPageChange(0) // Сбрасываем страницу при поиске
-            },
+            value = uiState.searchQuery,
+            onValueChange = { viewModel.updateSearchQuery(it) },
             label = "Поиск",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        )
-
-        CommonButton(
-            text = if (isTableVisible) "Скрыть таблицу" else "Показать таблицу",
-            onClick = { onTableVisibilityChange(!isTableVisible) },
-            type = ButtonType.Primary,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        CommonButton(
+            text = if (uiState.isTableVisible) "Скрыть таблицу" else "Показать таблицу",
+            onClick = { viewModel.toggleTableVisibility() },
+            type = ButtonType.Secondary,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         AnimatedVisibility(
-            visible = isTableVisible,
+            visible = uiState.isTableVisible,
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
-            Column {
-                CommonCard(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    LazyColumn(
+            CommonCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    // Заголовок таблицы
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(max = 320.dp)
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        item {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(
-                                    modifier = Modifier.weight(1f),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        text = "Слово",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    IconButton(
-                                        onClick = { 
-                                            sortDirection = if (sortBy.startsWith("text")) !sortDirection else true
-                                            sortBy = "text" + (if (sortDirection) "_asc" else "_desc")
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = if (sortBy.startsWith("text") && !sortDirection)
-                                                Icons.Default.ArrowDownward
-                                            else
-                                                Icons.Default.ArrowUpward,
-                                            contentDescription = "Сортировать по слову",
-                                            tint = if (sortBy.startsWith("text"))
-                                                MaterialTheme.colorScheme.primary
-                                            else
-                                                MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                                Text(
-                                    text = "Перевод",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Row(
-                                    modifier = Modifier.weight(0.6f),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Text(
-                                        text = "✓",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF4CAF50),
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text(
-                                        text = "✗",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFE57373),
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    IconButton(
-                                        onClick = { 
-                                            sortDirection = if (sortBy.startsWith("wrongAnswers")) !sortDirection else true
-                                            sortBy = "wrongAnswers" + (if (sortDirection) "_asc" else "_desc")
-                                        },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = if (sortBy.startsWith("wrongAnswers") && !sortDirection)
-                                                Icons.Default.ArrowDownward
-                                            else
-                                                Icons.Default.ArrowUpward,
-                                            contentDescription = "Сортировать по ошибкам",
-                                            tint = if (sortBy.startsWith("wrongAnswers"))
-                                                MaterialTheme.colorScheme.primary
-                                            else
-                                                MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                            Divider()
-                        }
+                        TableHeader(
+                            title = "Слово",
+                            sortKey = "text",
+                            currentSortBy = uiState.sortBy,
+                            onSort = { viewModel.updateSortOrder(it) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        TableHeader(
+                            title = "Перевод",
+                            sortKey = "translation",
+                            currentSortBy = uiState.sortBy,
+                            onSort = { viewModel.updateSortOrder(it) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        TableHeader(
+                            title = "✓",
+                            sortKey = "correctAnswers",
+                            currentSortBy = uiState.sortBy,
+                            onSort = { viewModel.updateSortOrder(it) },
+                            modifier = Modifier.weight(0.5f)
+                        )
+                        TableHeader(
+                            title = "✗",
+                            sortKey = "wrongAnswers",
+                            currentSortBy = uiState.sortBy,
+                            onSort = { viewModel.updateSortOrder(it) },
+                            modifier = Modifier.weight(0.5f)
+                        )
+                    }
 
-                        items(words.size) { index ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = words[index].text,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Text(
-                                    text = words[index].translation,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Text(
-                                    text = words[index].correctAnswers.toString(),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.weight(0.3f),
-                                    color = Color(0xFF4CAF50)
-                                )
-                                Text(
-                                    text = words[index].wrongAnswers.toString(),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.weight(0.3f),
-                                    color = Color(0xFFE57373)
-                                )
-                            }
-                            if (index < words.size - 1) {
+                    Divider()
+
+                    // Содержимое таблицы
+                    LazyColumn {
+                        items(uiState.words) { word ->
+                            Column {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = word.text,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Text(
+                                        text = word.translation,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Text(
+                                        text = "%.1f".format(word.correctAnswers),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.weight(0.5f)
+                                    )
+                                    Text(
+                                        text = "%.1f".format(word.wrongAnswers),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.weight(0.5f)
+                                    )
+                                }
                                 Divider()
                             }
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CommonButton(
-                        text = "Предыдущая",
-                        onClick = { if (currentPage > 0) onCurrentPageChange(currentPage - 1) },
-                        enabled = currentPage > 0,
-                        type = ButtonType.Secondary,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Text(
-                        text = "${currentPage + 1} / $totalPages",
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-
-                    CommonButton(
-                        text = "Следующая",
-                        onClick = { if (currentPage < totalPages - 1) onCurrentPageChange(currentPage + 1) },
-                        enabled = currentPage < totalPages - 1,
-                        type = ButtonType.Secondary,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
             }
+        }
+
+        if (uiState.totalPages > 1) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CommonButton(
+                    text = "Предыдущая",
+                    onClick = { viewModel.updateCurrentPage(uiState.currentPage - 1) },
+                    enabled = uiState.currentPage > 0,
+                    type = ButtonType.Secondary
+                )
+
+                Text(
+                    text = "${uiState.currentPage + 1} из ${uiState.totalPages}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                CommonButton(
+                    text = "Следующая",
+                    onClick = { viewModel.updateCurrentPage(uiState.currentPage + 1) },
+                    enabled = uiState.currentPage < uiState.totalPages - 1,
+                    type = ButtonType.Secondary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TableHeader(
+    title: String,
+    sortKey: String,
+    currentSortBy: String,
+    onSort: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
+        IconButton(
+            onClick = { 
+                val newSortBy = if (currentSortBy == "${sortKey}_asc") 
+                    "${sortKey}_desc" else "${sortKey}_asc"
+                onSort(newSortBy)
+            },
+            modifier = Modifier.size(24.dp)
+        ) {
+            Icon(
+                imageVector = if (currentSortBy == "${sortKey}_desc")
+                    Icons.Default.ArrowDownward
+                else
+                    Icons.Default.ArrowUpward,
+                contentDescription = "Сортировать по $title",
+                tint = if (currentSortBy.startsWith(sortKey))
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 } 

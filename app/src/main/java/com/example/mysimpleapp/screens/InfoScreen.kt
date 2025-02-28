@@ -16,7 +16,10 @@ import com.example.mysimpleapp.viewmodels.InfoViewModel
 @Composable
 fun InfoScreen(
     onThemeChange: () -> Unit,
-    viewModel: InfoViewModel = viewModel()
+    onBackClick: (() -> Unit)? = null,
+    onLogout: (() -> Unit)? = null,
+    viewModel: InfoViewModel = viewModel(),
+    isAuthenticated: Boolean = false
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -60,12 +63,35 @@ fun InfoScreen(
                 modifier = Modifier.padding(bottom = 32.dp)
             )
 
-            CommonButton(
-                text = "Настройки",
-                onClick = { viewModel.showSettings() },
-                type = ButtonType.Primary,
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(0.8f),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CommonButton(
+                    text = "Настройки",
+                    onClick = { viewModel.showSettings() },
+                    type = ButtonType.Secondary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (!isAuthenticated) {
+                    CommonButton(
+                        text = "Назад",
+                        onClick = { onBackClick?.invoke() },
+                        type = ButtonType.Secondary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                if (isAuthenticated) {
+                    CommonButton(
+                        text = "Выйти",
+                        onClick = { onLogout?.invoke() },
+                        type = ButtonType.Primary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
         }
     }
 } 

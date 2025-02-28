@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.example.mysimpleapp.components.ButtonType
@@ -26,9 +27,12 @@ import com.example.mysimpleapp.screens.RandomWordScreen
 import com.example.mysimpleapp.screens.InfoScreen
 import com.example.mysimpleapp.screens.DictionaryScreen
 import com.example.mysimpleapp.screens.QuizScreen
+import com.example.mysimpleapp.screens.AuthScreen
 import com.example.mysimpleapp.ui.theme.MySimpleAppTheme
 import com.example.mysimpleapp.data.TextEntity
 import com.example.mysimpleapp.ui.theme.AppTheme
+import com.example.mysimpleapp.viewmodels.AuthViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +47,8 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     MainScreen(
-                        onThemeChange = { currentTheme = if (currentTheme == AppTheme.MINT) AppTheme.GREY else AppTheme.MINT }
+                        onThemeChange = { currentTheme = if (currentTheme == AppTheme.MINT) AppTheme.GREY else AppTheme.MINT },
+                        authViewModel = viewModel()
                     )
                 }
             }
@@ -52,79 +57,85 @@ class MainActivity : ComponentActivity() {
 }
 
 enum class Screen(val icon: ImageVector, val label: String) {
+    Auth(Icons.Default.Person, "Авторизация"),
     Input(Icons.Default.Add, "Ввод"),
-    Random(Icons.Default.Shuffle, "Случайное"),
+    Random(Icons.Default.Shuffle, "Слова"),
     Quiz(Icons.Default.QuestionMark, "Квиз"),
     Dictionary(Icons.Default.List, "Словарь"),
     Info(Icons.Default.Info, "Инфо")
 }
 
 @Composable
-fun MainScreen(onThemeChange: () -> Unit) {
-    var currentScreen by remember { mutableStateOf(Screen.Input) }
-    
-    var dictionaryWords by remember { mutableStateOf<List<TextEntity>>(emptyList()) }
-    var isDictionaryTableVisible by remember { mutableStateOf(false) }
-    var dictionaryCurrentPage by remember { mutableStateOf(0) }
-    var dictionaryTotalPages by remember { mutableStateOf(0) }
+fun MainScreen(
+    onThemeChange: () -> Unit,
+    authViewModel: AuthViewModel = viewModel()
+) {
+    val authState by authViewModel.uiState.collectAsState()
+    var currentScreen by remember { mutableStateOf(Screen.Auth) }
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-                modifier = Modifier
-                    .shadow(8.dp, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-            ) {
-                Screen.values().forEach { screen ->
-                    NavigationBarItem(
-                        icon = { 
-                            Icon(
-                                screen.icon,
-                                contentDescription = screen.label,
-                                modifier = Modifier.size(26.dp)
-                            ) 
-                        },
-                        label = { 
-                            Text(
-                                screen.label,
-                                style = MaterialTheme.typography.labelSmall
-                            ) 
-                        },
-                        selected = currentScreen == screen,
-                        onClick = { currentScreen = screen },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
+    // Следим за изменением состояния авторизации
+    LaunchedEffect(authState.isAuthenticated) {
+        currentScreen = if (authState.isAuthenticated) {
+            Screen.Input
+        } else {
+            Screen.Auth
+        }
+    }
+
+    if (!authState.isAuthenticated) {
+        when (currentScreen) {
+            Screen.Auth -> AuthScreen(
+                onNavigateToInfo = { currentScreen = Screen.Info }
+            )
+            Screen.Info -> InfoScreen(
+                onThemeChange = onThemeChange,
+                onBackClick = { currentScreen = Screen.Auth },
+                onLogout = { authViewModel.logout() },
+                isAuthenticated = authState.isAuthenticated
+            )
+            else -> currentScreen = Screen.Auth
+        }
+    } else {
+        // Основной интерфейс приложения
+        var selectedItem by remember { mutableStateOf(Screen.Input.ordinal - 1) } // -1 because we skip Auth
+        
+        Scaffold(
+            bottomBar = {
+                NavigationBar {
+                    Screen.values().forEach { screen ->
+                        if (screen != Screen.Auth) {
+                            NavigationBarItem(
+                                icon = { Icon(screen.icon, contentDescription = null) },
+                                label = { Text(screen.label) },
+                                selected = currentScreen == screen,
+                                onClick = { 
+                                    currentScreen = screen
+                                    selectedItem = screen.ordinal - 1
+                                }
+                            )
+                        }
+                    }
                 }
             }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when (currentScreen) {
-                Screen.Input -> InputScreen()
-                Screen.Random -> RandomWordScreen()
-                Screen.Quiz -> QuizScreen()
-                Screen.Dictionary -> DictionaryScreen(
-                    words = dictionaryWords,
-                    isTableVisible = isDictionaryTableVisible,
-                    currentPage = dictionaryCurrentPage,
-                    totalPages = dictionaryTotalPages,
-                    onWordsChange = { dictionaryWords = it },
-                    onTableVisibilityChange = { isDictionaryTableVisible = it },
-                    onCurrentPageChange = { dictionaryCurrentPage = it },
-                    onTotalPagesChange = { dictionaryTotalPages = it }
-                )
-                Screen.Info -> InfoScreen(onThemeChange = onThemeChange)
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                when (currentScreen) {
+                    Screen.Input -> InputScreen()
+                    Screen.Random -> RandomWordScreen()
+                    Screen.Quiz -> QuizScreen()
+                    Screen.Dictionary -> DictionaryScreen()
+                    Screen.Info -> InfoScreen(
+                        onThemeChange = onThemeChange,
+                        onBackClick = { currentScreen = Screen.Auth },
+                        onLogout = { authViewModel.logout() },
+                        isAuthenticated = authState.isAuthenticated
+                    )
+                    else -> {}
+                }
             }
         }
     }
