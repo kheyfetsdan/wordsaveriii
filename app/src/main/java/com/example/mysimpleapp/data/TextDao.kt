@@ -3,6 +3,7 @@ package com.example.mysimpleapp.data
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 
 @Dao
 interface TextDao {
@@ -100,4 +101,10 @@ interface TextDao {
         LIMIT :limit OFFSET :offset
     """)
     suspend fun searchWordsSorted(query: String, sortBy: String, limit: Int, offset: Int): List<TextEntity>
+
+    @Query("SELECT * FROM texts ORDER BY RANDOM() LIMIT :limit")
+    suspend fun getRandomWords(limit: Int): List<TextEntity>
+
+    @Update
+    suspend fun update(text: TextEntity)
 }

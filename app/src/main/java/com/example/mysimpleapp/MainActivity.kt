@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.example.mysimpleapp.components.ButtonType
@@ -24,6 +25,7 @@ import com.example.mysimpleapp.screens.InputScreen
 import com.example.mysimpleapp.screens.RandomWordScreen
 import com.example.mysimpleapp.screens.InfoScreen
 import com.example.mysimpleapp.screens.DictionaryScreen
+import com.example.mysimpleapp.screens.QuizScreen
 import com.example.mysimpleapp.ui.theme.MySimpleAppTheme
 import com.example.mysimpleapp.data.TextEntity
 import com.example.mysimpleapp.ui.theme.AppTheme
@@ -52,6 +54,7 @@ class MainActivity : ComponentActivity() {
 enum class Screen(val icon: ImageVector, val label: String) {
     Input(Icons.Default.Add, "Ввод"),
     Random(Icons.Default.Shuffle, "Случайное"),
+    Quiz(Icons.Default.QuestionMark, "Квиз"),
     Dictionary(Icons.Default.List, "Словарь"),
     Info(Icons.Default.Info, "Инфо")
 }
@@ -110,7 +113,7 @@ fun MainScreen(onThemeChange: () -> Unit) {
             when (currentScreen) {
                 Screen.Input -> InputScreen()
                 Screen.Random -> RandomWordScreen()
-                Screen.Info -> InfoScreen(onThemeChange = onThemeChange)
+                Screen.Quiz -> QuizScreen()
                 Screen.Dictionary -> DictionaryScreen(
                     words = dictionaryWords,
                     isTableVisible = isDictionaryTableVisible,
@@ -121,6 +124,7 @@ fun MainScreen(onThemeChange: () -> Unit) {
                     onCurrentPageChange = { dictionaryCurrentPage = it },
                     onTotalPagesChange = { dictionaryTotalPages = it }
                 )
+                Screen.Info -> InfoScreen(onThemeChange = onThemeChange)
             }
         }
     }
