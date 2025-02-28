@@ -9,6 +9,6 @@ data class TextEntity(
     val id: Int = 0,
     val text: String,
     val translation: String,
-    val correctAnswers: Int = 0,
-    val wrongAnswers: Int = 0
+    val correctAnswers: Double = 0.0,
+    val wrongAnswers: Double = 0.0
 )
