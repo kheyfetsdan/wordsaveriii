@@ -16,41 +16,41 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val MintLightColorScheme = lightColorScheme(
-    primary = Color(0xFF006C5D),          // Основной мятный
+    primary = Color(0xFF004B00),          // Основной зеленый
     onPrimary = Color.White,
-    primaryContainer = Color(0xFF74F8DC),  // Светло-мятный контейнер
-    onPrimaryContainer = Color(0xFF002019), // Текст на мятном
-    secondary = Color(0xFF4A635E),         // Вторичный мятный
+    primaryContainer = Color(0xFF95F88B),  // Светло-зеленый контейнер
+    onPrimaryContainer = Color(0xFF002200), // Текст на зеленом
+    secondary = Color(0xFF52634C),         // Вторичный зеленый
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFCCE8E1), // Светло-мятный вторичный
-    onSecondaryContainer = Color(0xFF06201B), // Текст на вторичном
-    tertiary = Color(0xFF436277),          // Третичный цвет
+    secondaryContainer = Color(0xFFD4E8CC), // Светло-зеленый вторичный
+    onSecondaryContainer = Color(0xFF101F0D), // Текст на вторичном
+    tertiary = Color(0xFF386136),          // Третичный цвет
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFC8E6FF), // Контейнер третичного
-    onTertiaryContainer = Color(0xFF001E2F), // Текст на третичном
-    surface = Color(0xFFF5FAF8),           // Поверхность
-    onSurface = Color(0xFF191C1B),         // Текст на поверхности
-    surfaceVariant = Color(0xFFDBE5E1),    // Вариант поверхности
-    onSurfaceVariant = Color(0xFF3F4946)   // Текст на варианте
+    tertiaryContainer = Color(0xFFB8F4AF), // Контейнер третичного
+    onTertiaryContainer = Color(0xFF002200), // Текст на третичном
+    surface = Color(0xFFF8FAF6),           // Поверхность
+    onSurface = Color(0xFF191C19),         // Текст на поверхности
+    surfaceVariant = Color(0xFFE1E4DE),    // Вариант поверхности
+    onSurfaceVariant = Color(0xFF43483F)   // Текст на варианте
 )
 
 private val MintDarkColorScheme = darkColorScheme(
-    primary = Color(0xFF53DBc0),          // Мятный для тёмной темы
-    onPrimary = Color(0xFF003730),
-    primaryContainer = Color(0xFF005045),  // Тёмно-мятный контейнер
-    onPrimaryContainer = Color(0xFF74F8DC), // Текст на мятном
-    secondary = Color(0xFFB1CCC5),         // Вторичный мятный
-    onSecondary = Color(0xFF1C352F),
-    secondaryContainer = Color(0xFF324B46), // Тёмно-мятный вторичный
-    onSecondaryContainer = Color(0xFFCCE8E1), // Текст на вторичном
-    tertiary = Color(0xFFABCAE3),          // Третичный цвет
-    onTertiary = Color(0xFF0D3447),
-    tertiaryContainer = Color(0xFF294A5E), // Контейнер третичного
-    onTertiaryContainer = Color(0xFFC8E6FF), // Текст на третичном
-    surface = Color(0xFF191C1B),           // Поверхность
-    onSurface = Color(0xFFE0E3E1),         // Текст на поверхности
-    surfaceVariant = Color(0xFF3F4946),    // Вариант поверхности
-    onSurfaceVariant = Color(0xFFBFC9C5)   // Текст на варианте
+    primary = Color(0xFF7BDB70),          // Зеленый для тёмной темы
+    onPrimary = Color(0xFF003700),
+    primaryContainer = Color(0xFF004B00),  // Тёмно-зеленый контейнер
+    onPrimaryContainer = Color(0xFF95F88B), // Текст на зеленом
+    secondary = Color(0xFFB8CCB1),         // Вторичный зеленый
+    onSecondary = Color(0xFF253423),
+    secondaryContainer = Color(0xFF3B4B37), // Тёмно-зеленый вторичный
+    onSecondaryContainer = Color(0xFFD4E8CC), // Текст на вторичном
+    tertiary = Color(0xFF9CD894),          // Третичный цвет
+    onTertiary = Color(0xFF013401),
+    tertiaryContainer = Color(0xFF1F4B1C), // Контейнер третичного
+    onTertiaryContainer = Color(0xFFB8F4AF), // Текст на третичном
+    surface = Color(0xFF191C19),           // Поверхность
+    onSurface = Color(0xFFE1E3DF),         // Текст на поверхности
+    surfaceVariant = Color(0xFF43483F),    // Вариант поверхности
+    onSurfaceVariant = Color(0xFFBFC9BB)   // Текст на варианте
 )
 
 private val GreyLightColorScheme = lightColorScheme(

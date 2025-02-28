@@ -14,4 +14,10 @@ interface UserDao {
 
     @Insert
     suspend fun insertAll(users: List<UserEntity>)
+
+    @Insert
+    suspend fun insert(user: UserEntity)
+
+    @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
+    suspend fun getUserByEmail(email: String): UserEntity?
 } 
