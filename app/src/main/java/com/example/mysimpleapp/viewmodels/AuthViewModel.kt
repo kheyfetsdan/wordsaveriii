@@ -57,34 +57,23 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun login(email: String, password: String) {
         _uiState.value = _uiState.value.copy(
             email = email,
-            password = password
+            password = password,
+            isAuthenticated = true,
+            error = null
         )
-        login()
-    }
-
-    fun login() {
-        viewModelScope.launch {
-            val user = database.userDao().getUser(
-                _uiState.value.email,
-                _uiState.value.password
-            )
-            
-            if (user != null) {
-                _uiState.value = _uiState.value.copy(
-                    isAuthenticated = true,
-                    error = null
-                )
-                sharedPreferences.edit().putBoolean("is_authenticated", true).apply()
-            } else {
-                _uiState.value = _uiState.value.copy(
-                    error = "Неверный email или пароль"
-                )
-            }
-        }
+        sharedPreferences.edit().putBoolean("is_authenticated", true).apply()
     }
 
     fun logout() {
         _uiState.value = AuthUiState()
         sharedPreferences.edit().putBoolean("is_authenticated", false).apply()
+    }
+
+    fun saveToken(token: String) {
+        sharedPreferences.edit().putString("auth_token", token).apply()
+    }
+
+    fun getToken(): String? {
+        return sharedPreferences.getString("auth_token", null)
     }
 } 

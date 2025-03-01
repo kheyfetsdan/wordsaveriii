@@ -136,7 +136,13 @@ fun MainScreen(
             )
             Screen.Register -> RegisterScreen(
                 onNavigateBack = { currentScreen.value = Screen.Welcome },
-                authViewModel = authViewModel
+                authViewModel = authViewModel,
+                onRegistrationSuccess = { 
+                    currentScreen.value = Screen.Input 
+                },
+                onNavigateToLogin = {
+                    currentScreen.value = Screen.Auth
+                }
             )
             Screen.Info -> InfoScreen(
                 onThemeChange = onThemeChange,
