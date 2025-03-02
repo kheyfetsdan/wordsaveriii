@@ -83,7 +83,7 @@ fun AuthScreen(
 
                     CommonButton(
                         text = "Войти",
-                        onClick = { viewModel.login() },
+                        onClick = { viewModel.login(uiState.email, uiState.password) },
                         type = ButtonType.Primary,
                         modifier = Modifier.fillMaxWidth()
                     )

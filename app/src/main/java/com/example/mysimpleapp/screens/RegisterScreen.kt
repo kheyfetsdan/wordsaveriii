@@ -1,6 +1,7 @@
 package com.example.mysimpleapp.screens
 
 import android.app.Application
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -24,13 +25,17 @@ import androidx.lifecycle.ViewModel
 @Composable
 fun RegisterScreen(
     onNavigateBack: () -> Unit,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    onRegistrationSuccess: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val viewModel: RegisterViewModel = viewModel(
         factory = RegisterViewModel.provideFactory(
             context.applicationContext as Application,
-            authViewModel
+            authViewModel,
+            onRegistrationSuccess,
+            onNavigateToLogin
         )
     )
     
@@ -93,11 +98,25 @@ fun RegisterScreen(
                     )
 
                     if (uiState.error != null) {
-                        Text(
-                            text = uiState.error!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        if (uiState.showLoginLink) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "Пользователь с таким email уже зарегистрирован. Войти",
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.clickable { onNavigateToLogin() }
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = uiState.error!!,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
 
                     CommonButton(

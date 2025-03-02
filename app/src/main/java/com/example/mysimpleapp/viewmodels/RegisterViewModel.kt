@@ -11,32 +11,49 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.mysimpleapp.data.api.RetrofitClient
+import com.example.mysimpleapp.data.api.model.RegisterRequest
 
 data class RegisterUiState(
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
-    val error: String? = null
+    val error: String? = null,
+    val showLoginLink: Boolean = false
 )
 
 class RegisterViewModel(
     application: Application,
-    private val authViewModel: AuthViewModel
+    private val authViewModel: AuthViewModel,
+    private val onRegistrationSuccess: () -> Unit,
+    private val onNavigateToLogin: () -> Unit
 ) : AndroidViewModel(application) {
     private val userDao = AppDatabase.getDatabase(application).userDao()
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
     fun updateEmail(email: String) {
-        _uiState.value = _uiState.value.copy(email = email, error = null)
+        _uiState.value = _uiState.value.copy(
+            email = email, 
+            error = null,
+            showLoginLink = false
+        )
     }
 
     fun updatePassword(password: String) {
-        _uiState.value = _uiState.value.copy(password = password, error = null)
+        _uiState.value = _uiState.value.copy(
+            password = password, 
+            error = null,
+            showLoginLink = false
+        )
     }
 
     fun updateConfirmPassword(confirmPassword: String) {
-        _uiState.value = _uiState.value.copy(confirmPassword = confirmPassword, error = null)
+        _uiState.value = _uiState.value.copy(
+            confirmPassword = confirmPassword, 
+            error = null,
+            showLoginLink = false
+        )
     }
 
     fun register() {
@@ -60,29 +77,48 @@ class RegisterViewModel(
                     _uiState.value = state.copy(error = "Пароли не совпадают")
                     return@launch
                 }
-                // TODO: Добавить проверку формата email
-                // TODO: Добавить проверку сложности пароля
             }
 
             try {
-                // Проверяем, не существует ли уже пользователь с таким email
-                val existingUser = userDao.getUserByEmail(state.email)
-                if (existingUser != null) {
-                    _uiState.value = state.copy(error = "Пользователь с таким email уже существует")
-                    return@launch
-                }
-
-                // Создаем нового пользователя
-                val user = UserEntity(
-                    email = state.email,
-                    password = state.password // В реальном приложении нужно хэшировать!
+                val response = RetrofitClient.apiService.register(
+                    RegisterRequest(
+                        email = state.email,
+                        password = state.password
+                    )
                 )
-                userDao.insert(user)
 
-                // Авторизуем пользователя
-                authViewModel.login(state.email, state.password)
+                if (response.isSuccessful) {
+                    response.body()?.let { registerResponse ->
+                        authViewModel.saveToken(registerResponse.token)
+                        authViewModel.login(state.email, state.password)
+                        onRegistrationSuccess()
+                    }
+                } else {
+                    when (response.code()) {
+                        409 -> {
+                            _uiState.value = state.copy(
+                                error = "Пользователь с таким email уже зарегистрирован",
+                                showLoginLink = true
+                            )
+                        }
+                        400 -> {
+                            _uiState.value = state.copy(
+                                error = "Указан неправильный email"
+                            )
+                        }
+                        else -> {
+                            _uiState.value = state.copy(
+                                error = "Ошибка регистрации: ${response.message()}",
+                                showLoginLink = false
+                            )
+                        }
+                    }
+                }
             } catch (e: Exception) {
-                _uiState.value = state.copy(error = "Ошибка при регистрации: ${e.message}")
+                _uiState.value = state.copy(
+                    error = "Ошибка при регистрации: ${e.message}",
+                    showLoginLink = false
+                )
             }
         }
     }
@@ -90,11 +126,18 @@ class RegisterViewModel(
     companion object {
         fun provideFactory(
             application: Application,
-            authViewModel: AuthViewModel
+            authViewModel: AuthViewModel,
+            onRegistrationSuccess: () -> Unit,
+            onNavigateToLogin: () -> Unit
         ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return RegisterViewModel(application, authViewModel) as T
+                return RegisterViewModel(
+                    application, 
+                    authViewModel, 
+                    onRegistrationSuccess,
+                    onNavigateToLogin
+                ) as T
             }
         }
     }
