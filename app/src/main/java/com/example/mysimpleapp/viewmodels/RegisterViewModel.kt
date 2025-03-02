@@ -90,8 +90,8 @@ class RegisterViewModel(
                 if (response.isSuccessful) {
                     response.body()?.let { registerResponse ->
                         authViewModel.saveToken(registerResponse.token)
-                        authViewModel.login(state.email, state.password)
                         onRegistrationSuccess()
+                        authViewModel.login(state.email, state.password)
                     }
                 } else {
                     when (response.code()) {

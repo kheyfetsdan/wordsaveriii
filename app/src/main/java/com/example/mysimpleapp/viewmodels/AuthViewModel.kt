@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.mysimpleapp.data.api.RetrofitClient
+import com.example.mysimpleapp.data.api.model.LoginRequest
 
 data class AuthUiState(
     val isAuthenticated: Boolean = false,
@@ -54,19 +56,61 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun login(email: String, password: String) {
-        _uiState.value = _uiState.value.copy(
-            email = email,
-            password = password,
-            isAuthenticated = true,
-            error = null
-        )
+    fun loginAfterRegistration() {
         sharedPreferences.edit().putBoolean("is_authenticated", true).apply()
+    }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.login(
+                    LoginRequest(
+                        email = email,
+                        password = password
+                    )
+                )
+
+                if (response.isSuccessful) {
+                    response.body()?.let { loginResponse ->
+                        // Сохраняем токен
+                        saveToken(loginResponse.token)
+                        // Обновляем состояние
+                        _uiState.value = _uiState.value.copy(
+                            isAuthenticated = true,
+                            email = email,
+                            password = password,
+                            error = null
+                        )
+                        sharedPreferences.edit().putBoolean("is_authenticated", true).apply()
+                    }
+                } else {
+                    when (response.code()) {
+                        400 -> {
+                            _uiState.value = _uiState.value.copy(
+                                error = "Неверный email или пароль"
+                            )
+                        }
+                        else -> {
+                            _uiState.value = _uiState.value.copy(
+                                error = "Ошибка входа: ${response.message()}"
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Ошибка при входе: ${e.message}"
+                )
+            }
+        }
     }
 
     fun logout() {
         _uiState.value = AuthUiState()
-        sharedPreferences.edit().putBoolean("is_authenticated", false).apply()
+        sharedPreferences.edit()
+            .putBoolean("is_authenticated", false)
+            .putString("auth_token", null)
+            .apply()
     }
 
     fun saveToken(token: String) {
