@@ -101,6 +101,11 @@ class RegisterViewModel(
                                 showLoginLink = true
                             )
                         }
+                        400 -> {
+                            _uiState.value = state.copy(
+                                error = "Указан неправильный email"
+                            )
+                        }
                         else -> {
                             _uiState.value = state.copy(
                                 error = "Ошибка регистрации: ${response.message()}",
