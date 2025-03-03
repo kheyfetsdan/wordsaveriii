@@ -185,7 +185,9 @@ fun MainScreen(
                     .padding(paddingValues)
             ) {
                 when (currentScreen.value) {
-                    Screen.Input -> InputScreen()
+                    Screen.Input -> InputScreen(
+                        authViewModel = authViewModel
+                    )
                     Screen.Random -> RandomWordScreen()
                     Screen.Quiz -> QuizScreen()
                     Screen.Dictionary -> DictionaryScreen()
