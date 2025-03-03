@@ -23,14 +23,24 @@ import com.example.mysimpleapp.components.CommonTextField
 import com.example.mysimpleapp.components.CommonCard
 import com.example.mysimpleapp.viewmodels.InputViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.app.Application
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.style.TextAlign
+import com.example.mysimpleapp.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun InputScreen(
-    viewModel: InputViewModel = viewModel()
+    authViewModel: AuthViewModel
 ) {
-    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val viewModel: InputViewModel = viewModel(
+        factory = InputViewModel.provideFactory(
+            context.applicationContext as Application,
+            authViewModel
+        )
+    )
+    val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
     
     LaunchedEffect(uiState.showSuccessMessage, uiState.showErrorMessage) {
@@ -39,7 +49,11 @@ fun InputScreen(
             focusManager.clearFocus()
             viewModel.hideMessages()
         } else if (uiState.showErrorMessage) {
-            Toast.makeText(context, "Заполните оба поля", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context, 
+                uiState.error ?: "Заполните оба поля", 
+                Toast.LENGTH_SHORT
+            ).show()
             viewModel.hideMessages()
         }
     }
@@ -72,6 +86,15 @@ fun InputScreen(
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 )
+
+                if (uiState.error != null) {
+                    Text(
+                        text = uiState.error!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                }
             }
         }
         

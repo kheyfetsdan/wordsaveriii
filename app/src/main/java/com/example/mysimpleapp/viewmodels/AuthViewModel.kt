@@ -56,10 +56,6 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun loginAfterRegistration() {
-        sharedPreferences.edit().putBoolean("is_authenticated", true).apply()
-    }
-
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
@@ -72,16 +68,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (response.isSuccessful) {
                     response.body()?.let { loginResponse ->
-                        // Сохраняем токен
                         saveToken(loginResponse.token)
-                        // Обновляем состояние
                         _uiState.value = _uiState.value.copy(
                             isAuthenticated = true,
                             email = email,
                             password = password,
                             error = null
                         )
-                        sharedPreferences.edit().putBoolean("is_authenticated", true).apply()
+                        // Сохраняем состояние аутентификации
+                        sharedPreferences.edit()
+                            .putBoolean("is_authenticated", true)
+                            .apply()
                     }
                 } else {
                     when (response.code()) {
