@@ -1,5 +1,6 @@
 package com.example.mysimpleapp.screens
 
+import android.app.Application
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -15,23 +16,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mysimpleapp.components.*
+import com.example.mysimpleapp.viewmodels.AuthViewModel
 import com.example.mysimpleapp.viewmodels.RandomWordViewModel
 
 @Composable
 fun RandomWordScreen(
-    viewModel: RandomWordViewModel = viewModel()
+    authViewModel: AuthViewModel
 ) {
-    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val randomText = uiState.randomText
+    val viewModel: RandomWordViewModel = viewModel(
+        factory = RandomWordViewModel.provideFactory(
+            context.applicationContext as Application,
+            authViewModel
+        )
+    )
+    val uiState by viewModel.uiState.collectAsState()
     
+    LaunchedEffect(Unit) {
+        viewModel.loadNewWord()
+    }
+
     LaunchedEffect(uiState.isAnswerChecked) {
         if (uiState.isAnswerChecked) {
             val isCorrect = uiState.userTranslation.trim().equals(
-                randomText?.translation?.trim(),
+                uiState.translation?.trim(),
                 ignoreCase = true
             )
-            val message = if (isCorrect) "Правильно!" else "Неправильно. Правильный ответ: ${randomText?.translation}"
+            val message = if (isCorrect) "Правильно!" else "Неправильно. Правильный ответ: ${uiState.translation}"
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
@@ -61,9 +72,9 @@ fun RandomWordScreen(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (randomText != null) {
+                if (uiState.word != null) {
                     Text(
-                        text = randomText.text,
+                        text = uiState.word.toString(),
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.5.sp
@@ -82,15 +93,13 @@ fun RandomWordScreen(
                     )
 
                     if (uiState.isAnswerChecked) {
+                        val isCorrect = uiState.userTranslation.trim().equals(
+                            uiState.translation?.trim(),
+                            ignoreCase = true
+                        )
                         ResultText(
-                            isCorrect = uiState.userTranslation.trim().equals(
-                                randomText.translation.trim(),
-                                ignoreCase = true
-                            ),
-                            text = if (uiState.userTranslation.trim().equals(
-                                randomText.translation.trim(),
-                                ignoreCase = true
-                            )) "Правильно!" else "Неправильно"
+                            isCorrect = isCorrect,
+                            text = if (isCorrect) "Правильно!" else "Неправильно"
                         )
                     }
 
@@ -106,7 +115,7 @@ fun RandomWordScreen(
                         )
                     ) {
                         Text(
-                            text = randomText.translation,
+                            text = uiState.translation ?: "",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(vertical = 8.dp)
@@ -118,8 +127,18 @@ fun RandomWordScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Left,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 24.sp
+                        modifier = Modifier.fillMaxWidth()
+                        //lineHeight = 24.sp
                     )
+
+                    if (uiState.error != null) {
+                        Text(
+                            text = uiState.error!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.align(Alignment.Start)
+                        )
+                    }
                 }
             }
         }
@@ -132,7 +151,7 @@ fun RandomWordScreen(
                 text = "Проверить\nответ",
                 onClick = { viewModel.checkAnswer() },
                 modifier = Modifier.weight(1f),
-                enabled = randomText != null && 
+                enabled = uiState.word != null && 
                          uiState.userTranslation.isNotBlank() && 
                          !uiState.isAnswerChecked,
                 type = ButtonType.Primary
@@ -140,13 +159,13 @@ fun RandomWordScreen(
 
             CommonButton(
                 text = "Случайное\nслово",
-                onClick = { viewModel.loadRandomWord() },
+                onClick = { viewModel.loadNewWord() },
                 modifier = Modifier.weight(1f),
                 type = ButtonType.Secondary
             )
         }
 
-        if (!uiState.showTranslation && randomText != null) {
+        if (!uiState.showTranslation && uiState.word != null) {
             CommonButton(
                 text = "Показать перевод",
                 onClick = { viewModel.showConfirmDialog() },

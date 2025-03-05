@@ -188,7 +188,9 @@ fun MainScreen(
                     Screen.Input -> InputScreen(
                         authViewModel = authViewModel
                     )
-                    Screen.Random -> RandomWordScreen()
+                    Screen.Random -> RandomWordScreen(
+                        authViewModel = authViewModel
+                    )
                     Screen.Quiz -> QuizScreen()
                     Screen.Dictionary -> DictionaryScreen()
                     Screen.Info -> InfoScreen(

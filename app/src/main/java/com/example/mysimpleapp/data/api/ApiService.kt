@@ -5,6 +5,8 @@ import com.example.mysimpleapp.data.api.model.LoginResponse
 import com.example.mysimpleapp.data.api.model.RegisterRequest
 import com.example.mysimpleapp.data.api.model.RegisterResponse
 import com.example.mysimpleapp.data.api.model.SaveWordRequest
+import com.example.mysimpleapp.data.api.model.WordResponse
+import com.example.mysimpleapp.data.api.model.EmptyRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Header
@@ -22,4 +24,10 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: SaveWordRequest
     ): Response<Unit>
+
+    @POST("/get-word")
+    suspend fun getWord(
+        @Header("Authorization") token: String,
+        @Body request: EmptyRequest = EmptyRequest()
+    ): Response<WordResponse>
 } 
