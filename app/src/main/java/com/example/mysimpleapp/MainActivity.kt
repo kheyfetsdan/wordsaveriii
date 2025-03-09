@@ -192,7 +192,9 @@ fun MainScreen(
                         authViewModel = authViewModel
                     )
                     Screen.Quiz -> QuizScreen()
-                    Screen.Dictionary -> DictionaryScreen()
+                    Screen.Dictionary -> DictionaryScreen(
+                        authViewModel = authViewModel
+                    )
                     Screen.Info -> InfoScreen(
                         onThemeChange = onThemeChange,
                         onBackClick = { currentScreen.value = Screen.Auth },
