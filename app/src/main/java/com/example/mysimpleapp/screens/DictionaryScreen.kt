@@ -23,6 +23,8 @@ import androidx.compose.ui.platform.LocalContext
 import android.app.Application
 import com.example.mysimpleapp.components.WordCard
 import com.example.mysimpleapp.viewmodels.AuthViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
 fun DictionaryScreen(
@@ -36,6 +38,7 @@ fun DictionaryScreen(
         )
     )
     val uiState by viewModel.uiState.collectAsState()
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = uiState.isLoading)
 
     Column(
         modifier = Modifier
@@ -79,19 +82,33 @@ fun DictionaryScreen(
             )
         }
 
-        // Список слов
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(1.dp)
+        SwipeRefresh(
+            state = swipeRefreshState,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.weight(1f)
         ) {
-            items(uiState.words) { word ->
-                WordCard(
-                    word = word.text,
-                    translation = word.translation,
-                    successRate = word.correctAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
-                    failureRate = word.wrongAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
-                    modifier = Modifier.fillMaxWidth()
-                )
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                // Список слов
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                ) {
+                    items(uiState.words) { word ->
+                        WordCard(
+                            word = word.text,
+                            translation = word.translation,
+                            successRate = word.correctAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
+                            failureRate = word.wrongAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
         }
 
@@ -105,13 +122,13 @@ fun DictionaryScreen(
                 CommonButton(
                     text = "Назад",
                     onClick = { viewModel.updateCurrentPage(uiState.currentPage - 1) },
-                    enabled = uiState.currentPage > 0,
+                    enabled = uiState.currentPage > 1,
                     type = ButtonType.Secondary,
                     modifier = Modifier.weight(1f)
                 )
 
                 Text(
-                    text = "${uiState.currentPage + 1} из ${uiState.totalPages}",
+                    text = "${uiState.currentPage} из ${uiState.totalPages}",
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
@@ -119,7 +136,7 @@ fun DictionaryScreen(
                 CommonButton(
                     text = "Вперёд",
                     onClick = { viewModel.updateCurrentPage(uiState.currentPage + 1) },
-                    enabled = uiState.currentPage < uiState.totalPages - 1,
+                    enabled = uiState.currentPage < uiState.totalPages,
                     type = ButtonType.Secondary,
                     modifier = Modifier.weight(1f)
                 )

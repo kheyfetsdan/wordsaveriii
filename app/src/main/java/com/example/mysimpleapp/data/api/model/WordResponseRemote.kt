@@ -1,6 +1,6 @@
 package com.example.mysimpleapp.data.api.model
 
-data class WordResponse(
+data class WordResponseRemote(
     val id: Int,
     val word: String,
     val translation: String,

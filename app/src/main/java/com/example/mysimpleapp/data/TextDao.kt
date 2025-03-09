@@ -16,12 +16,6 @@ interface TextDao {
     @Query("SELECT COUNT(*) FROM texts")
     suspend fun getWordsCount(): Int
 
-    @Query("SELECT * FROM texts")
-    suspend fun getAllTexts(): List<TextEntity>
-
-    @Query("SELECT * FROM texts LIMIT :limit OFFSET :offset")
-    suspend fun getPagedWords(limit: Int, offset: Int): List<TextEntity>
-
     @Query("DELETE FROM texts")
     suspend fun deleteAll()
 
@@ -48,51 +42,11 @@ interface TextDao {
     suspend fun incrementWrongAnswers(textId: Int)
 
     @Query("""
-        SELECT * FROM texts 
-        WHERE text LIKE '%' || :query || '%' 
-        OR translation LIKE '%' || :query || '%'
-        LIMIT :limit OFFSET :offset
-    """)
-    suspend fun searchWords(query: String, limit: Int, offset: Int): List<TextEntity>
-
-    @Query("""
         SELECT COUNT(*) FROM texts 
         WHERE text LIKE '%' || :query || '%' 
         OR translation LIKE '%' || :query || '%'
     """)
     suspend fun getSearchWordsCount(query: String): Int
-
-    @Query("""
-        SELECT * FROM texts 
-        WHERE text LIKE '%' || :query || '%' OR translation LIKE '%' || :query || '%'
-        ORDER BY 
-            CASE 
-                WHEN :sortBy = 'text_asc' THEN text 
-                WHEN :sortBy = 'text_desc' THEN text
-                WHEN :sortBy = 'correct_asc' THEN correctAnswers
-                WHEN :sortBy = 'correct_desc' THEN correctAnswers
-                WHEN :sortBy = 'wrong_asc' THEN wrongAnswers
-                WHEN :sortBy = 'wrong_desc' THEN wrongAnswers
-            END ASC,
-            CASE 
-                WHEN :sortBy = 'text_desc' THEN text
-                WHEN :sortBy = 'correct_desc' THEN correctAnswers
-                WHEN :sortBy = 'wrong_desc' THEN wrongAnswers
-            END DESC
-        LIMIT :limit OFFSET :offset
-    """)
-    suspend fun getPagedWordsSorted(
-        query: String,
-        sortBy: String,
-        limit: Int,
-        offset: Int
-    ): List<TextEntity>
-
-    @Query("""
-        SELECT COUNT(*) FROM texts 
-        WHERE text LIKE '%' || :query || '%' OR translation LIKE '%' || :query || '%'
-    """)
-    suspend fun getFilteredWordsCount(query: String): Int
 
     @Query("SELECT * FROM texts ORDER BY RANDOM() LIMIT :limit")
     suspend fun getRandomWords(limit: Int): List<TextEntity>
