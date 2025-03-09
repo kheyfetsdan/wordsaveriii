@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.material.icons.extended)
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1'")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

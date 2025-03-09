@@ -19,122 +19,100 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import com.example.mysimpleapp.components.CommonTextField
+import androidx.compose.ui.platform.LocalContext
+import android.app.Application
+import com.example.mysimpleapp.components.WordCard
+import com.example.mysimpleapp.viewmodels.AuthViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
 fun DictionaryScreen(
-    viewModel: DictionaryViewModel = viewModel()
+    authViewModel: AuthViewModel
 ) {
+    val context = LocalContext.current
+    val viewModel: DictionaryViewModel = viewModel(
+        factory = DictionaryViewModel.provideFactory(
+            context.applicationContext as Application,
+            authViewModel
+        )
+    )
     val uiState by viewModel.uiState.collectAsState()
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = uiState.isLoading)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        CommonTextField(
-            value = uiState.searchQuery,
-            onValueChange = { viewModel.updateSearchQuery(it) },
-            label = "Поиск",
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        CommonButton(
-            text = if (uiState.isTableVisible) "Скрыть таблицу" else "Показать таблицу",
-            onClick = { viewModel.toggleTableVisibility() },
-            type = ButtonType.Secondary,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        AnimatedVisibility(
-            visible = uiState.isTableVisible,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
+        // Кнопки сортировки
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            CommonCard(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    // Заголовок таблицы
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        TableHeader(
-                            title = "Слово",
-                            sortKey = "text",
-                            currentSortBy = uiState.sortBy,
-                            onSort = { viewModel.updateSortOrder(it) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        TableHeader(
-                            title = "Перевод",
-                            sortKey = "translation",
-                            currentSortBy = uiState.sortBy,
-                            onSort = { viewModel.updateSortOrder(it) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        TableHeader(
-                            title = "✓",
-                            sortKey = "correctAnswers",
-                            currentSortBy = uiState.sortBy,
-                            onSort = { viewModel.updateSortOrder(it) },
-                            modifier = Modifier.weight(0.5f)
-                        )
-                        TableHeader(
-                            title = "✗",
-                            sortKey = "wrongAnswers",
-                            currentSortBy = uiState.sortBy,
-                            onSort = { viewModel.updateSortOrder(it) },
-                            modifier = Modifier.weight(0.5f)
-                        )
-                    }
+            CommonButton(
+                text = if (uiState.sortBy == "text_asc") "А-Я ↑" else "А-Я ↓",
+                onClick = { 
+                    val newSortOrder = if (uiState.sortBy == "text_asc") "text_desc" else "text_asc"
+                    viewModel.updateSortOrder(newSortOrder)
+                },
+                type = ButtonType.Secondary,
+                modifier = Modifier.weight(1f)
+            )
+            
+            CommonButton(
+                text = if (uiState.sortBy == "correct_asc") "✓ ↑" else "✓ ↓",
+                onClick = { 
+                    val newSortOrder = if (uiState.sortBy == "correct_asc") "correct_desc" else "correct_asc"
+                    viewModel.updateSortOrder(newSortOrder)
+                },
+                type = ButtonType.Secondary,
+                modifier = Modifier.weight(1f)
+            )
+            
+            CommonButton(
+                text = if (uiState.sortBy == "wrong_asc") "✗ ↑" else "✗ ↓",
+                onClick = { 
+                    val newSortOrder = if (uiState.sortBy == "wrong_asc") "wrong_desc" else "wrong_asc"
+                    viewModel.updateSortOrder(newSortOrder)
+                },
+                type = ButtonType.Secondary,
+                modifier = Modifier.weight(1f)
+            )
+        }
 
-                    Divider()
-
-                    // Содержимое таблицы
-                    LazyColumn {
-                        items(uiState.words) { word ->
-                            Column {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = word.text,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text(
-                                        text = word.translation,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text(
-                                        text = "%.1f".format(word.correctAnswers),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.weight(0.5f)
-                                    )
-                                    Text(
-                                        text = "%.1f".format(word.wrongAnswers),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.weight(0.5f)
-                                    )
-                                }
-                                Divider()
-                            }
-                        }
+        SwipeRefresh(
+            state = swipeRefreshState,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.weight(1f)
+        ) {
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                // Список слов
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                ) {
+                    items(uiState.words) { word ->
+                        WordCard(
+                            word = word.text,
+                            translation = word.translation,
+                            successRate = word.correctAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
+                            failureRate = word.wrongAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
         }
 
+        // Пагинация
         if (uiState.totalPages > 1) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -142,24 +120,37 @@ fun DictionaryScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 CommonButton(
-                    text = "Предыдущая",
+                    text = "Назад",
                     onClick = { viewModel.updateCurrentPage(uiState.currentPage - 1) },
-                    enabled = uiState.currentPage > 0,
-                    type = ButtonType.Secondary
+                    enabled = uiState.currentPage > 1,
+                    type = ButtonType.Secondary,
+                    modifier = Modifier.weight(1f)
                 )
 
                 Text(
-                    text = "${uiState.currentPage + 1} из ${uiState.totalPages}",
-                    style = MaterialTheme.typography.bodyLarge
+                    text = "${uiState.currentPage} из ${uiState.totalPages}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
 
                 CommonButton(
-                    text = "Следующая",
+                    text = "Вперёд",
                     onClick = { viewModel.updateCurrentPage(uiState.currentPage + 1) },
-                    enabled = uiState.currentPage < uiState.totalPages - 1,
-                    type = ButtonType.Secondary
+                    enabled = uiState.currentPage < uiState.totalPages,
+                    type = ButtonType.Secondary,
+                    modifier = Modifier.weight(1f)
                 )
             }
+        }
+
+        // Отображение ошибки, если есть
+        if (uiState.error != null) {
+            Text(
+                text = uiState.error!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
     }
 }
