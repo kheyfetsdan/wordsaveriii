@@ -1,5 +1,6 @@
 package com.example.mysimpleapp.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -10,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+
 
 @Composable
 fun WordCard(
@@ -18,10 +19,11 @@ fun WordCard(
     translation: String,
     successRate: Double,
     failureRate: Double,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     CommonCard(
-        modifier = modifier
+        modifier = modifier.clickable { onClick() }
     ) {
         Row(
             modifier = Modifier

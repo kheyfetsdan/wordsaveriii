@@ -9,10 +9,16 @@ import com.example.mysimpleapp.data.api.model.WordResponse
 import com.example.mysimpleapp.data.api.model.EmptyRequest
 import com.example.mysimpleapp.data.api.model.GetWordsRequest
 import com.example.mysimpleapp.data.api.model.GetWordsResponse
+import com.example.mysimpleapp.data.api.model.SaveWordIdRequest
+import com.example.mysimpleapp.data.api.model.WordResponseRemote
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.GET
+import retrofit2.http.Path
+import retrofit2.http.PUT
+import retrofit2.http.DELETE
 
 interface ApiService {
     @POST("/registration")
@@ -38,4 +44,22 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: GetWordsRequest
     ): Response<GetWordsResponse>
+
+    @GET("word/{id}")
+    suspend fun getWordById(
+        @Header("Authorization") token: String,
+        @Path("id") wordId: Int
+    ): Response<WordResponseRemote>
+
+    @PUT("word")
+    suspend fun updateWord(
+        @Header("Authorization") token: String,
+        @Body request: SaveWordIdRequest
+    ): Response<Unit>
+
+    @DELETE("delete-word/{id}")
+    suspend fun deleteWord(
+        @Header("Authorization") token: String,
+        @Path("id") wordId: Int
+    ): Response<Unit>
 } 
