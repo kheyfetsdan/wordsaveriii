@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
 fun WordCard(
     word: String,
     translation: String,
-    successRate: Double,
-    failureRate: Double,
+    successRate: Int,
+    failureRate: Int,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
@@ -57,12 +57,12 @@ fun WordCard(
             ) {
                 StatisticLabel(
                     icon = Icons.Default.Check,
-                    value = "${(successRate * 100).toInt()}%",
+                    value = successRate.toString(),
                     tint = MaterialTheme.colorScheme.primary
                 )
                 StatisticLabel(
                     icon = Icons.Default.Close,
-                    value = "${(failureRate * 100).toInt()}%",
+                    value = failureRate.toString(),
                     tint = MaterialTheme.colorScheme.error
                 )
             }

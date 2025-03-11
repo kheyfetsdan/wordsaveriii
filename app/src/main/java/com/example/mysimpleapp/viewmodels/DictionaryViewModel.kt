@@ -80,8 +80,8 @@ class DictionaryViewModel(
                                 id = remoteWord.id,
                                 text = remoteWord.word,
                                 translation = remoteWord.translation,
-                                correctAnswers = (remoteWord.success * 100),
-                                wrongAnswers = (remoteWord.failed * 100)
+                                correctAnswers = remoteWord.success,
+                                wrongAnswers = remoteWord.failed
                             )
                         }
 

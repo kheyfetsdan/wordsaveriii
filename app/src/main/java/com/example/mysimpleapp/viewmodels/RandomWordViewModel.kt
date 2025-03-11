@@ -12,15 +12,18 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.mysimpleapp.data.api.RetrofitClient
+import com.example.mysimpleapp.data.api.model.WordStatRequest
 
 data class RandomWordUiState(
-    val translation: String? = null,
-    val word: String? = null,
+    val word: String = "",
+    val translation: String = "",
     val userTranslation: String = "",
     val showTranslation: Boolean = false,
-    val showConfirmDialog: Boolean = false,
     val isAnswerChecked: Boolean = false,
-    val error: String? = null
+    val showConfirmDialog: Boolean = false,
+    val isCorrect: Boolean? = null,
+    val error: String? = null,
+    val wordId: Int = 0
 )
 
 class RandomWordViewModel(
@@ -51,7 +54,6 @@ class RandomWordViewModel(
             _uiState.value = RandomWordUiState(word = "")
         }
 
-        
         viewModelScope.launch {
             try {
                 val token = authViewModel.getToken()
@@ -66,40 +68,51 @@ class RandomWordViewModel(
 
                 if (response.isSuccessful) {
                     response.body()?.let { wordResponse ->
-                        _uiState.value = RandomWordUiState(  // Создаем новое состояние вместо copy
+                        _uiState.value = RandomWordUiState(
                             word = wordResponse.word,
-                            translation = wordResponse.translation
+                            translation = wordResponse.translation,
+                            wordId = wordResponse.id
                         )
                     }
                 } else {
-                    when (response.code()) {
-                        404 -> {
-                            _uiState.value = RandomWordUiState(
-                                error = "У вас не сохранено ни одного слова"
-                            )
-                        }
-                        else -> {
-                            _uiState.value = RandomWordUiState(
-                                error = "Ошибка загрузки слова: ${response.message()}"
-                            )
-                        }
-                    }
+                    _uiState.value = _uiState.value.copy(
+                        error = "Ошибка загрузки слова"
+                    )
                 }
             } catch (e: Exception) {
-                _uiState.value = RandomWordUiState(
-                    error = "Ошибка при загрузке слова: ${e.message}"
+                _uiState.value = _uiState.value.copy(
+                    error = "Ошибка загрузки слова: ${e.message}"
                 )
             }
         }
     }
 
+    private suspend fun updateWordStat(success: Boolean) {
+        try {
+            val token = authViewModel.getToken() ?: return
+
+            RetrofitClient.apiService.updateWordStat(
+                token = "Bearer $token",
+                wordId = _uiState.value.wordId,
+                request = WordStatRequest(success = success)
+            )
+        } catch (e: Exception) {
+            // Игнорируем ошибки обновления статистики
+        }
+    }
+
     fun checkAnswer() {
         val currentState = _uiState.value
-        val translation = currentState.translation ?: return
-
-        _uiState.value = currentState.copy(
-            isAnswerChecked = true
-        )
+        val isCorrect = currentState.userTranslation.trim().equals(currentState.translation.trim(), ignoreCase = true)
+        
+        viewModelScope.launch {
+            updateWordStat(isCorrect)
+            
+            _uiState.value = currentState.copy(
+                isAnswerChecked = true,
+                isCorrect = isCorrect
+            )
+        }
     }
 
     fun showConfirmDialog() {
@@ -111,10 +124,15 @@ class RandomWordViewModel(
     }
 
     fun showTranslation() {
-        _uiState.value = _uiState.value.copy(
-            showTranslation = true,
-            showConfirmDialog = false
-        )
+        viewModelScope.launch {
+            updateWordStat(false)
+            
+            _uiState.value = _uiState.value.copy(
+                showTranslation = true,
+                showConfirmDialog = false,
+                isAnswerChecked = false
+            )
+        }
     }
 
     fun clearState() {

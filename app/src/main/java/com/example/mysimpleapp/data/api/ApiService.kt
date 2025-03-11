@@ -11,6 +11,7 @@ import com.example.mysimpleapp.data.api.model.GetWordsRequest
 import com.example.mysimpleapp.data.api.model.GetWordsResponse
 import com.example.mysimpleapp.data.api.model.SaveWordIdRequest
 import com.example.mysimpleapp.data.api.model.WordResponseRemote
+import com.example.mysimpleapp.data.api.model.WordStatRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Header
@@ -61,5 +62,12 @@ interface ApiService {
     suspend fun deleteWord(
         @Header("Authorization") token: String,
         @Path("id") wordId: Int
+    ): Response<Unit>
+
+    @PUT("word-stat/{id}")
+    suspend fun updateWordStat(
+        @Header("Authorization") token: String,
+        @Path("id") wordId: Int,
+        @Body request: WordStatRequest
     ): Response<Unit>
 } 
