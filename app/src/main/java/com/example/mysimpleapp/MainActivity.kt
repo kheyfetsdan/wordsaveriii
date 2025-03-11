@@ -30,6 +30,7 @@ import com.example.mysimpleapp.screens.QuizScreen
 import com.example.mysimpleapp.screens.AuthScreen
 import com.example.mysimpleapp.screens.WelcomeScreen
 import com.example.mysimpleapp.screens.RegisterScreen
+import com.example.mysimpleapp.screens.WordDetailsScreen
 import com.example.mysimpleapp.ui.theme.MySimpleAppTheme
 import com.example.mysimpleapp.data.TextEntity
 import com.example.mysimpleapp.ui.theme.AppTheme
@@ -97,6 +98,7 @@ fun MainScreen(
 ) {
     val authState by authViewModel.uiState.collectAsState()
     var previousScreen by remember { mutableStateOf<Screen>(Screen.Input) }
+    var selectedWordId by remember { mutableStateOf<Int?>(null) }
     
     // Следим за изменением состояния авторизации
     LaunchedEffect(authState.isAuthenticated) {
@@ -192,14 +194,30 @@ fun MainScreen(
                         authViewModel = authViewModel
                     )
                     Screen.Quiz -> QuizScreen()
-                    Screen.Dictionary -> DictionaryScreen(
-                        authViewModel = authViewModel
-                    )
+                    Screen.Dictionary -> {
+                        if (selectedWordId != null) {
+                            WordDetailsScreen(
+                                wordId = selectedWordId!!,
+                                authViewModel = authViewModel,
+                                onNavigateBack = {
+                                    selectedWordId = null
+                                    currentScreen.value = Screen.Dictionary
+                                }
+                            )
+                        } else {
+                            DictionaryScreen(
+                                authViewModel = authViewModel,
+                                onNavigateToWordDetails = { wordId ->
+                                    selectedWordId = wordId
+                                }
+                            )
+                        }
+                    }
                     Screen.Info -> InfoScreen(
                         onThemeChange = onThemeChange,
-                        onBackClick = { currentScreen.value = Screen.Auth },
+                        onBackClick = { currentScreen.value = previousScreen },
                         onLogout = { authViewModel.logout() },
-                        isAuthenticated = authState.isAuthenticated
+                        isAuthenticated = true
                     )
                     else -> {}
                 }

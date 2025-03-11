@@ -73,11 +73,30 @@ fun CommonButton(
                 )
             }
         }
+        ButtonType.Danger -> {
+            FilledTonalButton(
+                onClick = onClick,
+                modifier = modifier.height(56.dp),
+                enabled = enabled,
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text(
+                    text = text,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
     }
 }
 
 enum class ButtonType {
     Primary,
     Secondary,
-    Tertiary
+    Tertiary,
+    Danger
 } 

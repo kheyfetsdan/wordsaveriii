@@ -1,6 +1,5 @@
 package com.example.mysimpleapp.screens
 
-import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
@@ -10,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mysimpleapp.components.CommonButton
 import com.example.mysimpleapp.components.ButtonType
-import com.example.mysimpleapp.components.CommonCard
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mysimpleapp.viewmodels.DictionaryViewModel
@@ -18,7 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import com.example.mysimpleapp.components.CommonTextField
 import androidx.compose.ui.platform.LocalContext
 import android.app.Application
 import com.example.mysimpleapp.components.WordCard
@@ -28,7 +25,8 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
 fun DictionaryScreen(
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    onNavigateToWordDetails: (Int) -> Unit
 ) {
     val context = LocalContext.current
     val viewModel: DictionaryViewModel = viewModel(
@@ -105,7 +103,8 @@ fun DictionaryScreen(
                             translation = word.translation,
                             successRate = word.correctAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
                             failureRate = word.wrongAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { onNavigateToWordDetails(word.id) }
                         )
                     }
                 }
