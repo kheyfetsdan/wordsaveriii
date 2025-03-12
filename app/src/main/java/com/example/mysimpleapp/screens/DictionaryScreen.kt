@@ -101,8 +101,8 @@ fun DictionaryScreen(
                         WordCard(
                             word = word.text,
                             translation = word.translation,
-                            successRate = word.correctAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
-                            failureRate = word.wrongAnswers.toDouble() / (word.correctAnswers + word.wrongAnswers).coerceAtLeast(1.0),
+                            successRate = word.correctAnswers.toInt(),
+                            failureRate = word.wrongAnswers.toInt(),
                             modifier = Modifier.fillMaxWidth(),
                             onClick = { onNavigateToWordDetails(word.id) }
                         )
