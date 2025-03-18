@@ -34,9 +34,13 @@ class RandomWordViewModel(
     
     private val _uiState = MutableStateFlow(RandomWordUiState())
     val uiState: StateFlow<RandomWordUiState> = _uiState.asStateFlow()
+    private var isInitialized = false
 
-    init {
-        loadNewWord()
+    fun startGame() {
+        if (!isInitialized) {
+            isInitialized = true
+            loadNewWord()
+        }
     }
 
     fun updateUserTranslation(translation: String) {

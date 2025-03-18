@@ -5,75 +5,133 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mysimpleapp.data.AppDatabase
 import com.example.mysimpleapp.data.TextEntity
+import com.example.mysimpleapp.data.api.model.QuizRequest
+import com.example.mysimpleapp.data.api.model.QuizResponse
+import com.example.mysimpleapp.data.api.model.WordStatRequest
+import com.example.mysimpleapp.data.api.RetrofitClient
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 
 data class QuizUiState(
-    val isGameStarted: Boolean = false,
-    val currentWords: List<TextEntity> = emptyList(),
-    val currentTranslation: String = "",
-    val selectedWordId: Int? = null,
+    val currentWord: String = "",
+    val currentWordId: Int = 0,
+    val translations: List<String> = emptyList(),
+    val correctTranslation: String = "",
+    val selectedTranslation: String? = null,
     val isCorrectAnswer: Boolean? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null,
     val timeLeft: Int = 5
 )
 
-class QuizViewModel(application: Application) : AndroidViewModel(application) {
-    private val database = AppDatabase.getDatabase(application)
+class QuizViewModel(
+    application: Application,
+    private val authViewModel: AuthViewModel
+) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(QuizUiState())
     val uiState: StateFlow<QuizUiState> = _uiState.asStateFlow()
-    
+
     private var countdownJob: Job? = null
-    
-    fun startGame() {
+    private var previousWord: String = ""
+    private var isInitialized = false
+
+    fun loadNewQuestion() {
         viewModelScope.launch {
-            loadNewQuestion()
-            _uiState.value = _uiState.value.copy(isGameStarted = true)
+            try {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = true,
+                    error = null,
+                    selectedTranslation = null,
+                    isCorrectAnswer = null
+                )
+
+                val token = authViewModel.getToken()
+                if (token == null) {
+                    _uiState.value = _uiState.value.copy(
+                        error = "Ошибка авторизации",
+                        isLoading = false
+                    )
+                    return@launch
+                }
+
+                val response = RetrofitClient.apiService.getQuizWord(
+                    token = "Bearer $token",
+                    request = QuizRequest(previousWord = previousWord)
+                )
+                if (response.isSuccessful) {
+                    response.body()?.let { quizResponse ->
+                        previousWord = quizResponse.word
+                        val translations = listOf(
+                            quizResponse.trueTranslation,
+                            quizResponse.translation1,
+                            quizResponse.translation2,
+                            quizResponse.translation3
+                        ).shuffled()
+
+                        _uiState.value = _uiState.value.copy(
+                            currentWord = quizResponse.word,
+                            currentWordId = quizResponse.id,
+                            translations = translations,
+                            correctTranslation = quizResponse.trueTranslation,
+                            isLoading = false
+                        )
+                    }
+
+                } else {
+                    when (response.code()) {
+                        412 -> {
+                            _uiState.value = _uiState.value.copy(
+                                error = "Недостаточно слов, чтобы начать квиз",
+                                isLoading = false
+                            )
+                        }
+                        else -> {
+                            println(response.code())
+                            _uiState.value = _uiState.value.copy(
+                                error = "Ошибка загрузки вопроса",
+                                isLoading = false
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Ошибка загрузки вопроса: ${e.message}",
+                    isLoading = false
+                )
+            }
         }
     }
-    
-    private suspend fun loadNewQuestion() {
-        val words = database.textDao().getRandomWords(4)
-        if (words.isNotEmpty()) {
-            val correctWord = words.random()
-            _uiState.value = _uiState.value.copy(
-                currentWords = words,
-                currentTranslation = correctWord.translation,
-                selectedWordId = null,
-                isCorrectAnswer = null,
-                timeLeft = 5
-            )
+
+    fun checkAnswer(selectedTranslation: String) {
+        val isCorrect = selectedTranslation == _uiState.value.correctTranslation
+
+        viewModelScope.launch {
+            try {
+                RetrofitClient.apiService.updateWordStat(
+                    token = "Bearer ${authViewModel.getToken()}",
+                    wordId = _uiState.value.currentWordId,
+                    request = WordStatRequest(success = isCorrect)
+                )
+            } catch (e: Exception) {
+                // Игнорируем ошибки обновления статистики
+            }
         }
-    }
-    
-    fun checkAnswer(selectedWord: TextEntity) {
-        val isCorrect = selectedWord.translation == _uiState.value.currentTranslation
+
         _uiState.value = _uiState.value.copy(
-            selectedWordId = selectedWord.id,
+            selectedTranslation = selectedTranslation,
             isCorrectAnswer = isCorrect
         )
-        
+
         if (isCorrect) {
             startCountdown()
-            viewModelScope.launch {
-                // Обновляем статистику
-                val word = selectedWord.copy(
-                    correctAnswers = selectedWord.correctAnswers + 1
-                )
-                database.textDao().update(word)
-            }
-        } else {
-            viewModelScope.launch {
-                // Обновляем статистику
-                val word = selectedWord.copy(
-                    wrongAnswers = selectedWord.wrongAnswers + 1
-                )
-                database.textDao().update(word)
-            }
         }
     }
-    
+
     private fun startCountdown() {
         countdownJob?.cancel()
         countdownJob = viewModelScope.launch {
@@ -86,9 +144,29 @@ class QuizViewModel(application: Application) : AndroidViewModel(application) {
             loadNewQuestion()
         }
     }
-    
+
+    fun startGame() {
+        if (!isInitialized) {
+            isInitialized = true
+            previousWord = ""
+            loadNewQuestion()
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         countdownJob?.cancel()
+    }
+
+    companion object {
+        fun provideFactory(
+            application: Application,
+            authViewModel: AuthViewModel
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return QuizViewModel(application, authViewModel) as T
+            }
+        }
     }
 } 

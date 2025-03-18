@@ -193,7 +193,10 @@ fun MainScreen(
                     Screen.Random -> RandomWordScreen(
                         authViewModel = authViewModel
                     )
-                    Screen.Quiz -> QuizScreen()
+                    Screen.Quiz -> QuizScreen(
+                        authViewModel = authViewModel,
+                        onNavigateToInput = { currentScreen.value = Screen.Input }
+                    )
                     Screen.Dictionary -> {
                         if (selectedWordId != null) {
                             WordDetailsScreen(
