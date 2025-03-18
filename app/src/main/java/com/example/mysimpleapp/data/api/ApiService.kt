@@ -34,10 +34,9 @@ interface ApiService {
         @Body request: SaveWordRequest
     ): Response<Unit>
 
-    @POST("/get-word")
+    @GET("/sorted-random-word")
     suspend fun getWord(
-        @Header("Authorization") token: String,
-        @Body request: EmptyRequest = EmptyRequest()
+        @Header("Authorization") token: String
     ): Response<WordResponse>
 
     @POST("get-words-by-user")
