@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.mysimpleapp.data.repository.RepositoryAdapter
+import com.example.mysimpleapp.data.repository.AuthRepository
 
 data class QuizUiState(
     val currentWord: String = "",
@@ -39,6 +41,8 @@ class QuizViewModel(
     private var previousWord: String = ""
     private var isInitialized = false
 
+    private val repositoryAdapter = RepositoryAdapter(AuthRepository(application))
+
     fun loadNewQuestion() {
         viewModelScope.launch {
             try {
@@ -49,58 +53,36 @@ class QuizViewModel(
                     isCorrectAnswer = null
                 )
 
-                val token = authViewModel.getToken()
-                if (token == null) {
+                val result = repositoryAdapter.getQuizWord(previousWord)
+                
+                if (result.isSuccess) {
+                    val quizWord = result.getOrNull()!!
+                    previousWord = quizWord.word
+                    
+                    val translations = listOf(
+                        quizWord.trueTranslation,
+                        quizWord.translation1,
+                        quizWord.translation2,
+                        quizWord.translation3
+                    ).shuffled()
+                    
                     _uiState.value = _uiState.value.copy(
-                        error = "Ошибка авторизации",
+                        currentWordId = quizWord.id,
+                        currentWord = quizWord.word,
+                        correctTranslation = quizWord.trueTranslation,
+                        translations = translations,
+                        isLoading = false,
+                        timeLeft = 5
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = result.exceptionOrNull()?.message ?: "Неизвестная ошибка",
                         isLoading = false
                     )
-                    return@launch
-                }
-
-                val response = RetrofitClient.apiService.getQuizWord(
-                    token = "Bearer $token",
-                    request = QuizRequest(previousWord = previousWord)
-                )
-                if (response.isSuccessful) {
-                    response.body()?.let { quizResponse ->
-                        previousWord = quizResponse.word
-                        val translations = listOf(
-                            quizResponse.trueTranslation,
-                            quizResponse.translation1,
-                            quizResponse.translation2,
-                            quizResponse.translation3
-                        ).shuffled()
-
-                        _uiState.value = _uiState.value.copy(
-                            currentWord = quizResponse.word,
-                            currentWordId = quizResponse.id,
-                            translations = translations,
-                            correctTranslation = quizResponse.trueTranslation,
-                            isLoading = false
-                        )
-                    }
-
-                } else {
-                    when (response.code()) {
-                        412 -> {
-                            _uiState.value = _uiState.value.copy(
-                                error = "Недостаточно слов, чтобы начать квиз",
-                                isLoading = false
-                            )
-                        }
-                        else -> {
-                            println(response.code())
-                            _uiState.value = _uiState.value.copy(
-                                error = "Ошибка загрузки вопроса",
-                                isLoading = false
-                            )
-                        }
-                    }
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Ошибка загрузки вопроса: ${e.message}",
+                    error = e.message ?: "Неизвестная ошибка",
                     isLoading = false
                 )
             }
@@ -112,10 +94,9 @@ class QuizViewModel(
 
         viewModelScope.launch {
             try {
-                RetrofitClient.apiService.updateWordStat(
-                    token = "Bearer ${authViewModel.getToken()}",
+                repositoryAdapter.updateWordStat(
                     wordId = _uiState.value.currentWordId,
-                    request = WordStatRequest(success = isCorrect)
+                    success = isCorrect
                 )
             } catch (e: Exception) {
                 // Игнорируем ошибки обновления статистики

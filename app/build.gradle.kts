@@ -1,8 +1,8 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp") version "2.0.21-1.0.27"
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -61,7 +61,7 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1'")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-jackson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -73,6 +73,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation("com.google.dagger:hilt-android:2.50")
+    ksp("com.google.dagger:hilt-android-compiler:2.50")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
