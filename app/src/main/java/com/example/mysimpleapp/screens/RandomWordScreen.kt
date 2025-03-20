@@ -19,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mysimpleapp.components.*
 import com.example.mysimpleapp.viewmodels.AuthViewModel
 import com.example.mysimpleapp.viewmodels.RandomWordViewModel
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun RandomWordScreen(
@@ -166,14 +167,59 @@ fun RandomWordScreen(
             )
         }
 
-        if (!uiState.showTranslation && uiState.word != null) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
             CommonButton(
                 text = "Показать перевод",
                 onClick = { viewModel.showConfirmDialog() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
+                modifier = Modifier.weight(1f),
+                type = ButtonType.Secondary
+            )
+            
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            CommonButton(
+                text = "Пропустить",
+                onClick = { viewModel.showSkipConfirmDialog() },
+                modifier = Modifier.weight(1f),
                 type = ButtonType.Tertiary
+            )
+        }
+
+        if (uiState.showSkipConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = { viewModel.hideSkipConfirmDialog() },
+                title = { Text("Пропустить слово?") },
+                text = { Text("Вы уверены, что хотите пропустить это слово? Оно будет отмечено как неправильно отвеченное.") },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.skipWord() }) {
+                        Text("Да, пропустить")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.hideSkipConfirmDialog() }) {
+                        Text("Отмена")
+                    }
+                }
+            )
+        }
+
+        if (uiState.countdown > 0) {
+            Text(
+                text = "Следующее слово через: ${uiState.countdown}",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+        }
+
+        if (uiState.isCheckingAnswer) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp)
             )
         }
     }

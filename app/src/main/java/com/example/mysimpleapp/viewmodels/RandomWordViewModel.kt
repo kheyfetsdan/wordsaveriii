@@ -13,6 +13,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.mysimpleapp.data.api.RetrofitClient
 import com.example.mysimpleapp.data.api.model.WordStatRequest
+import android.util.Log
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 data class RandomWordUiState(
     val word: String = "",
@@ -23,7 +26,15 @@ data class RandomWordUiState(
     val showConfirmDialog: Boolean = false,
     val isCorrect: Boolean? = null,
     val error: String? = null,
-    val wordId: Int = 0
+    val wordId: Int = 0,
+    val isLoading: Boolean = false,
+    val isSuccess: Boolean = false,
+    val isCheckingAnswer: Boolean = false,
+    val showSkipConfirmDialog: Boolean = false,
+    val countdown: Int = 0,
+    val totalWords: Int = 0,
+    val correctAnswers: Int = 0,
+    val wrongAnswers: Int = 0
 )
 
 class RandomWordViewModel(
@@ -35,6 +46,7 @@ class RandomWordViewModel(
     private val _uiState = MutableStateFlow(RandomWordUiState())
     val uiState: StateFlow<RandomWordUiState> = _uiState.asStateFlow()
     private var isInitialized = false
+    private var countdownJob: Job? = null
 
     fun startGame() {
         if (!isInitialized) {
@@ -60,14 +72,23 @@ class RandomWordViewModel(
 
         viewModelScope.launch {
             try {
+                // Устанавливаем состояние загрузки
+                _uiState.value = _uiState.value.copy(
+                    isLoading = true,
+                    error = null
+                )
+                
+                // Проверяем токен
                 val token = authViewModel.getToken()
                 if (token == null) {
                     _uiState.value = _uiState.value.copy(
-                        error = "Ошибка авторизации"
+                        error = "Ошибка авторизации",
+                        isLoading = false
                     )
                     return@launch
                 }
 
+                // Используем токен в запросе
                 val response = RetrofitClient.apiService.getWord("Bearer $token")
 
                 if (response.isSuccessful) {
@@ -75,17 +96,21 @@ class RandomWordViewModel(
                         _uiState.value = RandomWordUiState(
                             word = wordResponse.word,
                             translation = wordResponse.translation,
-                            wordId = wordResponse.id
+                            wordId = wordResponse.id,
+                            isLoading = false,
+                            isSuccess = true
                         )
                     }
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        error = "Ошибка загрузки слова"
+                        error = "Ошибка загрузки слова: ${response.message()}",
+                        isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Ошибка загрузки слова: ${e.message}"
+                    error = "Ошибка загрузки слова: ${e.message}",
+                    isLoading = false
                 )
             }
         }
@@ -94,28 +119,89 @@ class RandomWordViewModel(
     private suspend fun updateWordStat(success: Boolean) {
         try {
             val token = authViewModel.getToken() ?: return
-
+            
             RetrofitClient.apiService.updateWordStat(
                 token = "Bearer $token",
                 wordId = _uiState.value.wordId,
                 request = WordStatRequest(success = success)
             )
         } catch (e: Exception) {
-            // Игнорируем ошибки обновления статистики
+            // Логируем ошибку, но не показываем пользователю
+            Log.e("RandomWordViewModel", "Ошибка обновления статистики: ${e.message}")
+        }
+    }
+
+    private fun startCountdown() {
+        countdownJob?.cancel()
+        
+        _uiState.value = _uiState.value.copy(countdown = 3)
+        
+        countdownJob = viewModelScope.launch {
+            for (i in 3 downTo 1) {
+                _uiState.value = _uiState.value.copy(countdown = i)
+                delay(1000)
+            }
+            
+            _uiState.value = _uiState.value.copy(countdown = 0)
+            loadNewWord()
+        }
+    }
+
+    private fun updateStats(isCorrect: Boolean) {
+        val currentState = _uiState.value
+        
+        if (isCorrect) {
+            _uiState.value = currentState.copy(
+                correctAnswers = currentState.correctAnswers + 1,
+                totalWords = currentState.totalWords + 1
+            )
+        } else {
+            _uiState.value = currentState.copy(
+                wrongAnswers = currentState.wrongAnswers + 1,
+                totalWords = currentState.totalWords + 1
+            )
         }
     }
 
     fun checkAnswer() {
         val currentState = _uiState.value
-        val isCorrect = currentState.userTranslation.trim().equals(currentState.translation.trim(), ignoreCase = true)
+        
+        if (currentState.isCheckingAnswer) return
+        
+        val trimmedUserTranslation = currentState.userTranslation.trim()
+        
+        if (trimmedUserTranslation.isBlank()) {
+            _uiState.value = currentState.copy(
+                error = "Введите перевод слова"
+            )
+            return
+        }
+        
+        val isCorrect = trimmedUserTranslation.equals(currentState.translation.trim(), ignoreCase = true)
         
         viewModelScope.launch {
-            updateWordStat(isCorrect)
-            
-            _uiState.value = currentState.copy(
-                isAnswerChecked = true,
-                isCorrect = isCorrect
-            )
+            try {
+                _uiState.value = currentState.copy(
+                    isCheckingAnswer = true,
+                    error = null
+                )
+                
+                updateWordStat(isCorrect)
+                updateStats(isCorrect)
+                
+                _uiState.value = currentState.copy(
+                    isAnswerChecked = true,
+                    isCorrect = isCorrect,
+                    isCheckingAnswer = false
+                )
+                
+                startCountdown()
+            } catch (e: Exception) {
+                _uiState.value = currentState.copy(
+                    error = "Ошибка при проверке ответа: ${e.message}",
+                    isCheckingAnswer = false
+                )
+            }
         }
     }
 
@@ -130,17 +216,54 @@ class RandomWordViewModel(
     fun showTranslation() {
         viewModelScope.launch {
             updateWordStat(false)
+            updateStats(false)
             
             _uiState.value = _uiState.value.copy(
                 showTranslation = true,
                 showConfirmDialog = false,
                 isAnswerChecked = false
             )
+            
+            startCountdown()
+        }
+    }
+
+    fun showSkipConfirmDialog() {
+        _uiState.value = _uiState.value.copy(showSkipConfirmDialog = true)
+    }
+
+    fun hideSkipConfirmDialog() {
+        _uiState.value = _uiState.value.copy(showSkipConfirmDialog = false)
+    }
+
+    fun skipWord() {
+        viewModelScope.launch {
+            try {
+                updateWordStat(false)
+                updateStats(false)
+                
+                _uiState.value = _uiState.value.copy(
+                    showSkipConfirmDialog = false
+                )
+                
+                loadNewWord()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Ошибка при пропуске слова: ${e.message}",
+                    showSkipConfirmDialog = false
+                )
+            }
         }
     }
 
     fun clearState() {
+        countdownJob?.cancel()
         _uiState.value = RandomWordUiState()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        countdownJob?.cancel()
     }
 
     companion object {
