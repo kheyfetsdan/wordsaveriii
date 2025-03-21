@@ -43,18 +43,12 @@ fun InputScreen(
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
     
-    LaunchedEffect(uiState.showSuccessMessage, uiState.showErrorMessage) {
+    LaunchedEffect(uiState.showSuccessMessage) {
         if (uiState.showSuccessMessage) {
             Toast.makeText(context, "Слово и перевод сохранены", Toast.LENGTH_SHORT).show()
             focusManager.clearFocus()
             viewModel.hideMessages()
-        } else if (uiState.showErrorMessage) {
-            Toast.makeText(
-                context, 
-                uiState.error ?: "Заполните оба поля", 
-                Toast.LENGTH_SHORT
-            ).show()
-            viewModel.hideMessages()
+            viewModel.clearFields()
         }
     }
 
@@ -85,14 +79,30 @@ fun InputScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
+                        .onKeyEvent { event ->
+                            if (event.key == Key.Enter && event.type == KeyEventType.KeyUp) {
+                                viewModel.saveWord()
+                                true
+                            } else {
+                                false
+                            }
+                        }
                 )
 
-                if (uiState.error != null) {
+                if (uiState.showErrorMessage) {
                     Text(
-                        text = uiState.error!!,
+                        text = uiState.error ?: "Заполните оба поля",
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(top = 8.dp)
                     )
                 }
             }

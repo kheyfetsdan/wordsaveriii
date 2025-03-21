@@ -22,7 +22,9 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.PUT
 import retrofit2.http.DELETE
+import kotlin.jvm.JvmSuppressWildcards
 
+@JvmSuppressWildcards
 interface ApiService {
     @POST("/registration")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
@@ -41,38 +43,38 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<WordResponse>
 
-    @POST("get-words-by-user")
+    @POST("/get-words-by-user")
     suspend fun getWordsByUser(
         @Header("Authorization") token: String,
         @Body request: GetWordsRequest
     ): Response<GetWordsResponse>
 
-    @GET("word/{id}")
+    @GET("/word/{id}")
     suspend fun getWordById(
         @Header("Authorization") token: String,
         @Path("id") wordId: Int
     ): Response<WordResponseRemote>
 
-    @PUT("word")
+    @PUT("/word")
     suspend fun updateWord(
         @Header("Authorization") token: String,
         @Body request: SaveWordIdRequest
     ): Response<Unit>
 
-    @DELETE("delete-word/{id}")
+    @DELETE("/delete-word/{id}")
     suspend fun deleteWord(
         @Header("Authorization") token: String,
         @Path("id") wordId: Int
     ): Response<Unit>
 
-    @PUT("word-stat/{id}")
+    @PUT("/word-stat/{id}")
     suspend fun updateWordStat(
         @Header("Authorization") token: String,
         @Path("id") wordId: Int,
         @Body request: WordStatRequest
     ): Response<Unit>
 
-    @POST("quiz")
+    @POST("/quiz")
     suspend fun getQuizWord(
         @Header("Authorization") token: String,
         @Body request: QuizRequest

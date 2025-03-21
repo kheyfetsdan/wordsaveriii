@@ -17,7 +17,8 @@ data class AuthUiState(
     val isAuthenticated: Boolean = false,
     val email: String = "",
     val password: String = "",
-    val error: String? = null
+    val error: String? = null,
+    val token: String? = null
 )
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
@@ -105,16 +106,59 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun logout() {
         _uiState.value = AuthUiState()
         sharedPreferences.edit()
+            .remove("auth_token")
             .putBoolean("is_authenticated", false)
-            .putString("auth_token", null)
             .apply()
     }
 
     fun saveToken(token: String) {
-        sharedPreferences.edit().putString("auth_token", token).apply()
+        sharedPreferences.edit()
+            .putString("auth_token", token)
+            .apply()
+        
+        _uiState.value = _uiState.value.copy(
+            token = token,
+            isAuthenticated = true
+        )
+        
+        RetrofitClient.init(getApplication())
     }
 
     fun getToken(): String? {
-        return sharedPreferences.getString("auth_token", null)
+        val cachedToken = _uiState.value.token
+        if (!cachedToken.isNullOrEmpty()) {
+            return cachedToken
+        }
+        
+        val token = sharedPreferences.getString("auth_token", null)
+        if (!token.isNullOrEmpty()) {
+            _uiState.value = _uiState.value.copy(token = token)
+        }
+        return token
+    }
+
+    fun checkAuthentication() {
+        val isAuthenticated = sharedPreferences.getBoolean("is_authenticated", false)
+        val token = sharedPreferences.getString("auth_token", null)
+        
+        if (isAuthenticated && !token.isNullOrEmpty()) {
+            _uiState.value = _uiState.value.copy(
+                isAuthenticated = true,
+                token = token
+            )
+        }
+    }
+
+    fun registerUser(token: String, email: String) {
+        saveToken(token)
+        _uiState.value = _uiState.value.copy(
+            isAuthenticated = true,
+            email = email,
+            error = null
+        )
+        // Сохраняем состояние аутентификации
+        sharedPreferences.edit()
+            .putBoolean("is_authenticated", true)
+            .apply()
     }
 } 

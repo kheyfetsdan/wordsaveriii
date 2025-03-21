@@ -17,9 +17,10 @@ import androidx.lifecycle.ViewModelProvider
 data class InputUiState(
     val text: String = "",
     val translation: String = "",
-    val showSuccessMessage: Boolean = false,
     val showErrorMessage: Boolean = false,
-    val error: String? = null
+    val showSuccessMessage: Boolean = false,
+    val error: String? = null,
+    val isLoading: Boolean = false
 )
 
 class InputViewModel(
@@ -41,18 +42,32 @@ class InputViewModel(
 
     fun saveWord() {
         val currentState = _uiState.value
-        if (currentState.text.isBlank() || currentState.translation.isBlank()) {
-            _uiState.value = currentState.copy(showErrorMessage = true)
+        
+        val trimmedText = currentState.text.trim()
+        val trimmedTranslation = currentState.translation.trim()
+        
+        if (trimmedText.isBlank() || trimmedTranslation.isBlank()) {
+            _uiState.value = currentState.copy(
+                showErrorMessage = true,
+                error = "Поля не могут быть пустыми"
+            )
             return
         }
-
+        
         viewModelScope.launch {
             try {
+                _uiState.value = currentState.copy(
+                    isLoading = true,
+                    showErrorMessage = false,
+                    error = null
+                )
+                
                 val token = authViewModel.getToken()
                 if (token == null) {
                     _uiState.value = currentState.copy(
                         showErrorMessage = true,
-                        error = "Ошибка авторизации"
+                        error = "Ошибка авторизации",
+                        isLoading = false
                     )
                     return@launch
                 }
@@ -60,41 +75,42 @@ class InputViewModel(
                 val response = RetrofitClient.apiService.saveWord(
                     token = "Bearer $token",
                     request = SaveWordRequest(
-                        word = currentState.text.trim(),
-                        translation = currentState.translation.trim()
+                        word = trimmedText,
+                        translation = trimmedTranslation
                     )
                 )
 
                 if (response.isSuccessful) {
-                    _uiState.value = InputUiState(showSuccessMessage = true)
+                    _uiState.value = InputUiState(
+                        showSuccessMessage = true,
+                        isLoading = false
+                    )
                 } else {
-                    when (response.code()) {
-                        409 -> {
-                            _uiState.value = _uiState.value.copy(
-                                error = "Слово уже существует"
-                            )
-                        }
-                        else -> {
-                            _uiState.value = currentState.copy(
-                                showErrorMessage = true,
-                                error = "Ошибка сохранения: ${response.message()}"
-                            )
-                        }
-                    }
+                    _uiState.value = currentState.copy(
+                        showErrorMessage = true,
+                        error = "Ошибка сохранения: ${response.message()}",
+                        isLoading = false
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.value = currentState.copy(
                     showErrorMessage = true,
-                    error = "Ошибка при сохранении: ${e.message}"
+                    error = "Ошибка сохранения: ${e.message}",
+                    isLoading = false
                 )
             }
         }
     }
 
+    fun clearFields() {
+        _uiState.value = InputUiState()
+    }
+
     fun hideMessages() {
         _uiState.value = _uiState.value.copy(
+            showErrorMessage = false,
             showSuccessMessage = false,
-            showErrorMessage = false
+            error = null
         )
     }
 
