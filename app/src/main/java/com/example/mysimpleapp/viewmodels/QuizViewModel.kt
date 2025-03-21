@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.mysimpleapp.data.AppDatabase
 import com.example.mysimpleapp.data.TextEntity
 import com.example.mysimpleapp.data.api.model.QuizRequest
-import com.example.mysimpleapp.data.api.model.QuizResponse
 import com.example.mysimpleapp.data.api.model.WordStatRequest
 import com.example.mysimpleapp.data.api.RetrofitClient
 import kotlinx.coroutines.*
@@ -15,6 +14,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.mysimpleapp.viewmodels.quiz.QuizRepository
+import com.example.mysimpleapp.viewmodels.quiz.QuizUseCase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 data class QuizUiState(
     val currentWord: String = "",
@@ -35,6 +38,9 @@ class QuizViewModel(
     private val _uiState = MutableStateFlow(QuizUiState())
     val uiState: StateFlow<QuizUiState> = _uiState.asStateFlow()
 
+    private val repository = QuizRepository()
+    private val quizUseCase = QuizUseCase(repository, authViewModel)
+    
     private var countdownJob: Job? = null
     private var previousWord: String = ""
     private var isInitialized = false

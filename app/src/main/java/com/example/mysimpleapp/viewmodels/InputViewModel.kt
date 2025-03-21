@@ -13,105 +13,142 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-
-data class InputUiState(
-    val text: String = "",
-    val translation: String = "",
-    val showErrorMessage: Boolean = false,
-    val showSuccessMessage: Boolean = false,
-    val error: String? = null,
-    val isLoading: Boolean = false
-)
+import com.example.mysimpleapp.viewmodels.input.InputRepository
+import com.example.mysimpleapp.viewmodels.input.InputWordState
+import com.example.mysimpleapp.viewmodels.input.InputUseCase
+import retrofit2.Response
 
 class InputViewModel(
     application: Application,
-    private val authViewModel: AuthViewModel
-) : AndroidViewModel(application) {
-    private val database = AppDatabase.getDatabase(application)
-    
-    private val _uiState = MutableStateFlow(InputUiState())
-    val uiState: StateFlow<InputUiState> = _uiState.asStateFlow()
+    authViewModel: AuthViewModel
+) : BaseViewModel<InputWordState>(
+    application,
+    authViewModel,
+    InputWordState()
+) {
+    private val repository = InputRepository()
+    private val inputUseCase = InputUseCase(repository, authViewModel)
 
-    fun updateText(newText: String) {
-        _uiState.value = _uiState.value.copy(text = newText)
+    fun updateText(text: String) {
+        val formattedText = inputUseCase.formatInput(text)
+        val isValid = inputUseCase.validateInput(formattedText)
+        
+        updateState { it.copy(
+            text = formattedText,
+            isValid = isValid,
+            error = if (!isValid && formattedText.isNotEmpty()) "Текст недействителен" else null,
+            showErrorMessage = !isValid && formattedText.isNotEmpty()
+        )}
     }
 
     fun updateTranslation(newTranslation: String) {
-        _uiState.value = _uiState.value.copy(translation = newTranslation)
+        updateState { it.copy(translation = newTranslation) }
     }
 
-    fun saveWord() {
+    fun saveInput() {
         val currentState = _uiState.value
+        val currentText = currentState.text
+        val currentTranslation = currentState.translation
         
-        val trimmedText = currentState.text.trim()
-        val trimmedTranslation = currentState.translation.trim()
-        
-        if (trimmedText.isBlank() || trimmedTranslation.isBlank()) {
-            _uiState.value = currentState.copy(
-                showErrorMessage = true,
-                error = "Поля не могут быть пустыми"
-            )
+        if (!inputUseCase.validateInput(currentText)) {
+            updateState { it.copy(
+                error = "Введите слово", 
+                showErrorMessage = true
+            )}
             return
         }
         
-        viewModelScope.launch {
-            try {
-                _uiState.value = currentState.copy(
-                    isLoading = true,
-                    showErrorMessage = false,
-                    error = null
-                )
-                
-                val token = authViewModel.getToken()
-                if (token == null) {
-                    _uiState.value = currentState.copy(
-                        showErrorMessage = true,
-                        error = "Ошибка авторизации",
-                        isLoading = false
-                    )
-                    return@launch
-                }
-
-                val response = RetrofitClient.apiService.saveWord(
-                    token = "Bearer $token",
-                    request = SaveWordRequest(
-                        word = trimmedText,
-                        translation = trimmedTranslation
-                    )
-                )
-
-                if (response.isSuccessful) {
-                    _uiState.value = InputUiState(
-                        showSuccessMessage = true,
-                        isLoading = false
-                    )
-                } else {
-                    _uiState.value = currentState.copy(
-                        showErrorMessage = true,
-                        error = "Ошибка сохранения: ${response.message()}",
-                        isLoading = false
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.value = currentState.copy(
-                    showErrorMessage = true,
-                    error = "Ошибка сохранения: ${e.message}",
-                    isLoading = false
-                )
+        if (!inputUseCase.validateInput(currentTranslation)) {
+            updateState { it.copy(
+                error = "Введите перевод",
+                showErrorMessage = true
+            )}
+            return
+        }
+        
+        launchWithErrorHandling(
+            onError = { errorMessage ->
+                updateState { it.copy(
+                    error = "Ошибка сохранения: $errorMessage",
+                    isLoading = false,
+                    showErrorMessage = true
+                )}
             }
+        ) {
+            saveWordToApi()
+        }
+    }
+    
+    private suspend fun saveWordToApi() {
+        val saveAction = withLoadingState {
+            withToken(
+                onError = { errorMessage ->
+                    updateState { it.copy(
+                        error = errorMessage,
+                        isLoading = false
+                    )}
+                }
+            ) { token ->
+                apiCall(
+                    onError = { errorMessage ->
+                        updateState { it.copy(
+                            error = "Ошибка сохранения: $errorMessage",
+                            isLoading = false
+                        )}
+                    }
+                ) {
+                    val currentState = _uiState.value
+                    inputUseCase.saveWord(
+                        token, 
+                        currentState.text, 
+                        currentState.translation
+                    )
+                }?.let { response ->
+                    handleSaveResponse(response)
+                }
+            }
+        }
+        
+        saveAction(
+            { isLoading -> _uiState.value.copy(isLoading = isLoading) },
+            { error -> _uiState.value.copy(error = error) }
+        )
+    }
+    
+    private fun handleSaveResponse(response: Response<*>) {
+        if (response.isSuccessful) {
+            updateState { it.copy(
+                showSuccessMessage = true,
+                showErrorMessage = false,
+                isLoading = false,
+                text = "",
+                translation = "",
+                isValid = false,
+                error = null
+            )}
+        } else {
+            updateState { it.copy(
+                error = "Ошибка: ${response.code()} ${response.message()}",
+                isLoading = false,
+                showErrorMessage = true
+            )}
         }
     }
 
     fun clearFields() {
-        _uiState.value = InputUiState()
+        updateState { InputWordState() }
     }
 
     fun hideMessages() {
-        _uiState.value = _uiState.value.copy(
+        updateState { it.copy(
             showErrorMessage = false,
             showSuccessMessage = false,
             error = null
-        )
+        )}
+    }
+
+    fun saveWord() {
+        saveInput()
     }
 
     companion object {

@@ -28,7 +28,6 @@ class RegisterViewModel(
     private val onRegistrationSuccess: () -> Unit,
     private val onNavigateToLogin: () -> Unit
 ) : AndroidViewModel(application) {
-    private val userDao = AppDatabase.getDatabase(application).userDao()
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
