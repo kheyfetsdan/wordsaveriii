@@ -21,9 +21,13 @@ import com.example.mysimpleapp.data.TextEntity
 import androidx.compose.ui.platform.LocalContext
 import com.example.mysimpleapp.components.MaterialToast
 import android.app.Application
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.mysimpleapp.components.PulseEffect
 import com.example.mysimpleapp.viewmodels.AuthViewModel
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun QuizScreen(
     authViewModel: AuthViewModel,
@@ -95,13 +99,21 @@ fun QuizScreen(
                 CommonCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = uiState.currentWord,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(24.dp)
-                    )
+                    AnimatedContent(
+                        targetState = uiState.currentWord,
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(300)) with 
+                            fadeOut(animationSpec = tween(300))
+                        }
+                    ) { word ->
+                        Text(
+                            text = word,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(24.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -127,16 +139,25 @@ fun QuizScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             firstRow.forEach { translation ->
-                                QuizAnswerCard(
-                                    text = translation,
-                                    isSelected = translation == uiState.selectedTranslation,
-                                    isCorrectAnswer = uiState.isCorrectAnswer,
-                                    correctTranslation = uiState.correctTranslation,
-                                    onClick = { viewModel.checkAnswer(translation) },
-                                    enabled = uiState.selectedTranslation == null || 
-                                             (uiState.selectedTranslation != null && !uiState.isCorrectAnswer!!),
+                                AnimatedContent(
+                                    targetState = translation,
+                                    transitionSpec = {
+                                        fadeIn(animationSpec = tween(300)) with 
+                                        fadeOut(animationSpec = tween(300))
+                                    },
                                     modifier = Modifier.weight(1f)
-                                )
+                                ) { currentTranslation ->
+                                    QuizAnswerCard(
+                                        text = currentTranslation,
+                                        isSelected = currentTranslation == uiState.selectedTranslation,
+                                        isCorrectAnswer = uiState.isCorrectAnswer,
+                                        correctTranslation = uiState.correctTranslation,
+                                        onClick = { viewModel.checkAnswer(currentTranslation) },
+                                        enabled = uiState.selectedTranslation == null || 
+                                                 (uiState.selectedTranslation != null && !uiState.isCorrectAnswer!!),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
 
@@ -146,16 +167,25 @@ fun QuizScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             secondRow.forEach { translation ->
-                                QuizAnswerCard(
-                                    text = translation,
-                                    isSelected = translation == uiState.selectedTranslation,
-                                    isCorrectAnswer = uiState.isCorrectAnswer,
-                                    correctTranslation = uiState.correctTranslation,
-                                    onClick = { viewModel.checkAnswer(translation) },
-                                    enabled = uiState.selectedTranslation == null || 
-                                             (uiState.selectedTranslation != null && !uiState.isCorrectAnswer!!),
+                                AnimatedContent(
+                                    targetState = translation,
+                                    transitionSpec = {
+                                        fadeIn(animationSpec = tween(300)) with 
+                                        fadeOut(animationSpec = tween(300))
+                                    },
                                     modifier = Modifier.weight(1f)
-                                )
+                                ) { currentTranslation ->
+                                    QuizAnswerCard(
+                                        text = currentTranslation,
+                                        isSelected = currentTranslation == uiState.selectedTranslation,
+                                        isCorrectAnswer = uiState.isCorrectAnswer,
+                                        correctTranslation = uiState.correctTranslation,
+                                        onClick = { viewModel.checkAnswer(currentTranslation) },
+                                        enabled = uiState.selectedTranslation == null || 
+                                                 (uiState.selectedTranslation != null && !uiState.isCorrectAnswer!!),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
                     }
@@ -195,30 +225,81 @@ private fun QuizAnswerCard(
     enabled: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.animateContentSize(),
-        colors = CardDefaults.cardColors(
-            containerColor = when {
-                isSelected && text == correctTranslation -> Color(0xFF4CAF50) // Зеленый только для выбранного правильного
-                isSelected && isCorrectAnswer == false -> Color(0xFFE57373) // Красный для выбранного неправильного
-                else -> MaterialTheme.colorScheme.surface
-            },
-            contentColor = if (isSelected && isCorrectAnswer != null) {
-                Color.White
-            } else {
-                MaterialTheme.colorScheme.onSurface
+    if (isSelected && text == correctTranslation) {
+        PulseEffect(
+            modifier = modifier,
+            pulseFraction = 1.03f,
+            duration = 800
+        ) {
+            Card(
+                modifier = modifier
+                    .height(80.dp)
+                    .animateContentSize(),
+                colors = CardDefaults.cardColors(
+                    containerColor = when {
+                        isSelected && text == correctTranslation -> Color(0xFF4CAF50)
+                        isSelected && isCorrectAnswer == false -> Color(0xFFE57373)
+                        else -> MaterialTheme.colorScheme.surface
+                    },
+                    contentColor = if (isSelected && isCorrectAnswer != null) {
+                        Color.White
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                ),
+                enabled = enabled,
+                onClick = onClick
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
-        ),
-        enabled = enabled,
-        onClick = onClick
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            textAlign = TextAlign.Center
-        )
+        }
+    } else {
+        Card(
+            modifier = modifier
+                .height(80.dp)
+                .animateContentSize(),
+            colors = CardDefaults.cardColors(
+                containerColor = when {
+                    isSelected && text == correctTranslation -> Color(0xFF4CAF50)
+                    isSelected && isCorrectAnswer == false -> Color(0xFFE57373)
+                    else -> MaterialTheme.colorScheme.surface
+                },
+                contentColor = if (isSelected && isCorrectAnswer != null) {
+                    Color.White
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            ),
+            enabled = enabled,
+            onClick = onClick
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
 } 

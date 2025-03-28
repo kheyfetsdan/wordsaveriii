@@ -16,41 +16,57 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val MintLightColorScheme = lightColorScheme(
-    primary = Color(0xFF004B00),          // Основной зеленый
+    primary = Color(0xFF0066CC),          // Более тёмный синий для лучшего контраста
     onPrimary = Color.White,
-    primaryContainer = Color(0xFF95F88B),  // Светло-зеленый контейнер
-    onPrimaryContainer = Color(0xFF002200), // Текст на зеленом
-    secondary = Color(0xFF52634C),         // Вторичный зеленый
+    primaryContainer = Color(0xFFE1F0FF),  // Чуть более контрастный светло-голубой
+    onPrimaryContainer = Color(0xFF003166), // Более тёмный синий для текста
+    
+    secondary = Color(0xFF2EB84D),         // Более насыщенный зеленый
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFD4E8CC), // Светло-зеленый вторичный
-    onSecondaryContainer = Color(0xFF101F0D), // Текст на вторичном
-    tertiary = Color(0xFF386136),          // Третичный цвет
+    secondaryContainer = Color(0xFFE3F5E6), // Более контрастный светло-зеленый
+    onSecondaryContainer = Color(0xFF0A3D15), // Более тёмный зеленый для текста
+    
+    tertiary = Color(0xFF4F4FD1),          // Более насыщенный фиолетовый
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFB8F4AF), // Контейнер третичного
-    onTertiaryContainer = Color(0xFF002200), // Текст на третичном
-    surface = Color(0xFFF8FAF6),           // Поверхность
-    onSurface = Color(0xFF191C19),         // Текст на поверхности
-    surfaceVariant = Color(0xFFE1E4DE),    // Вариант поверхности
-    onSurfaceVariant = Color(0xFF43483F)   // Текст на варианте
+    tertiaryContainer = Color(0xFFEAEAFC), // Более контрастный светло-фиолетовый
+    onTertiaryContainer = Color(0xFF191966), // Более тёмный фиолетовый для текста
+    
+    surface = Color(0xFFFFFFFF),           // Чисто белый для максимального контраста
+    onSurface = Color(0xFF000000),         // Чисто черный для текста
+    surfaceVariant = Color(0xFFF5F5F7),    // Более контрастный серый
+    onSurfaceVariant = Color(0xFF1A1A1A),  // Почти черный для текста
+    
+    error = Color(0xFFE11900),             // Более тёмный красный
+    onError = Color.White,
+    errorContainer = Color(0xFFFFE9E5),    // Более контрастный светло-красный
+    onErrorContainer = Color(0xFF800F00)    // Более тёмный красный для текста
 )
 
 private val MintDarkColorScheme = darkColorScheme(
-    primary = Color(0xFF7BDB70),          // Зеленый для тёмной темы
-    onPrimary = Color(0xFF003700),
-    primaryContainer = Color(0xFF004B00),  // Тёмно-зеленый контейнер
-    onPrimaryContainer = Color(0xFF95F88B), // Текст на зеленом
-    secondary = Color(0xFFB8CCB1),         // Вторичный зеленый
-    onSecondary = Color(0xFF253423),
-    secondaryContainer = Color(0xFF3B4B37), // Тёмно-зеленый вторичный
-    onSecondaryContainer = Color(0xFFD4E8CC), // Текст на вторичном
-    tertiary = Color(0xFF9CD894),          // Третичный цвет
-    onTertiary = Color(0xFF013401),
-    tertiaryContainer = Color(0xFF1F4B1C), // Контейнер третичного
-    onTertiaryContainer = Color(0xFFB8F4AF), // Текст на третичном
-    surface = Color(0xFF191C19),           // Поверхность
-    onSurface = Color(0xFFE1E3DF),         // Текст на поверхности
-    surfaceVariant = Color(0xFF43483F),    // Вариант поверхности
-    onSurfaceVariant = Color(0xFFBFC9BB)   // Текст на варианте
+    primary = Color(0xFF47A3FF),          // Более яркий синий
+    onPrimary = Color.Black,
+    primaryContainer = Color(0xFF004C99),  // Более насыщенный тёмно-синий
+    onPrimaryContainer = Color(0xFFD6EBFF), // Более светлый для контраста
+    
+    secondary = Color(0xFF4CD365),         // Более яркий зеленый
+    onSecondary = Color.Black,
+    secondaryContainer = Color(0xFF0F5524), // Более насыщенный тёмно-зеленый
+    onSecondaryContainer = Color(0xFFCFFED7), // Более светлый зеленый
+    
+    tertiary = Color(0xFF7A7AFF),          // Более яркий фиолетовый
+    onTertiary = Color.Black,
+    tertiaryContainer = Color(0xFF2E2E7F), // Более насыщенный тёмно-фиолетовый
+    onTertiaryContainer = Color(0xFFE6E6FF), // Более светлый фиолетовый
+    
+    surface = Color(0xFF000000),           // Чисто черный
+    onSurface = Color(0xFFFFFFFF),         // Чисто белый
+    surfaceVariant = Color(0xFF1A1A1A),    // Более контрастный тёмный
+    onSurfaceVariant = Color(0xFFF0F0F0),  // Более контрастный светлый
+    
+    error = Color(0xFFFF5449),             // Более яркий красный
+    onError = Color.Black,
+    errorContainer = Color(0xFF930F00),    // Более насыщенный тёмно-красный
+    onErrorContainer = Color(0xFFFFDAD6)    // Более светлый красный
 )
 
 private val GreyLightColorScheme = lightColorScheme(

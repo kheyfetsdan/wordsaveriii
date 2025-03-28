@@ -49,7 +49,6 @@ class QuizViewModel(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(
-                    isLoading = true,
                     error = null,
                     selectedTranslation = null,
                     isCorrectAnswer = null
@@ -58,8 +57,7 @@ class QuizViewModel(
                 val token = authViewModel.getToken()
                 if (token == null) {
                     _uiState.value = _uiState.value.copy(
-                        error = "Ошибка авторизации",
-                        isLoading = false
+                        error = "Ошибка авторизации"
                     )
                     return@launch
                 }
@@ -82,32 +80,27 @@ class QuizViewModel(
                             currentWord = quizResponse.word,
                             currentWordId = quizResponse.id,
                             translations = translations,
-                            correctTranslation = quizResponse.trueTranslation,
-                            isLoading = false
+                            correctTranslation = quizResponse.trueTranslation
                         )
                     }
-
                 } else {
                     when (response.code()) {
                         412 -> {
                             _uiState.value = _uiState.value.copy(
-                                error = "Недостаточно слов, чтобы начать квиз",
-                                isLoading = false
+                                error = "Недостаточно слов, чтобы начать квиз"
                             )
                         }
                         else -> {
                             println(response.code())
                             _uiState.value = _uiState.value.copy(
-                                error = "Ошибка загрузки вопроса",
-                                isLoading = false
+                                error = "Ошибка загрузки вопроса"
                             )
                         }
                     }
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = "Ошибка загрузки вопроса: ${e.message}",
-                    isLoading = false
+                    error = "Ошибка загрузки вопроса: ${e.message}"
                 )
             }
         }

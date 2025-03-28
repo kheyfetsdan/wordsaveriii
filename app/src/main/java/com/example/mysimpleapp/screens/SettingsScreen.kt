@@ -12,6 +12,7 @@ import com.example.mysimpleapp.components.CommonButton
 import com.example.mysimpleapp.components.ButtonType
 import com.example.mysimpleapp.components.CommonCard
 import com.example.mysimpleapp.components.CommonDialog
+import com.example.mysimpleapp.components.PulseEffect
 import com.example.mysimpleapp.viewmodels.SettingsViewModel
 
 @Composable
@@ -47,34 +48,36 @@ fun SettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
         CommonCard {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(32.dp),
+                verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
                 Text(
                     text = "Внешний вид",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
 
                 CommonButton(
                     text = "Сменить тему",
                     onClick = onThemeChange,
-                    type = ButtonType.Secondary,
-                    modifier = Modifier.fillMaxWidth()
+                    type = ButtonType.Primary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         CommonCard {
             Column(
@@ -113,12 +116,17 @@ fun SettingsScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                CommonButton(
-                    text = "Нажми меня",
-                    onClick = { viewModel.showEasterEggDialog() },
-                    type = ButtonType.Tertiary,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                PulseEffect(
+                    pulseFraction = 1.02f,
+                    duration = 2000
+                ) {
+                    CommonButton(
+                        text = "Нажми меня",
+                        onClick = { viewModel.showEasterEggDialog() },
+                        type = ButtonType.Tertiary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
 

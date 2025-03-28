@@ -22,26 +22,9 @@ data class AuthUiState(
 )
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
-    private val database = AppDatabase.getDatabase(application)
     private val sharedPreferences = application.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
     private val _uiState = MutableStateFlow(AuthUiState(isAuthenticated = sharedPreferences.getBoolean("is_authenticated", false)))
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
-
-    init {
-        // Добавляем тестовых пользователей только если их еще нет
-        viewModelScope.launch {
-            val testUsers = listOf(
-                UserEntity("test1@test.ru", "111111"),
-                UserEntity("test2@test.ru", "222222")
-            )
-            
-            testUsers.forEach { user ->
-                if (database.userDao().getUserCount(user.email) == 0) {
-                    database.userDao().insertAll(listOf(user))
-                }
-            }
-        }
-    }
 
     fun updateEmail(email: String) {
         _uiState.value = _uiState.value.copy(

@@ -44,7 +44,8 @@ fun RandomWordScreen(
                 uiState.translation?.trim(),
                 ignoreCase = true
             )
-            val message = if (isCorrect) "Правильно!" else "Неправильно. Правильный ответ: ${uiState.translation}"
+            val message =
+                if (isCorrect) "Правильно!" else "Неправильно. Правильный ответ: ${uiState.translation}"
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
@@ -76,14 +77,12 @@ fun RandomWordScreen(
             ) {
                 if (uiState.word != null) {
                     Text(
-                        text = uiState.word.toString(),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.5.sp
-                        ),
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = uiState.word,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
+
 
                     CommonTextField(
                         value = uiState.userTranslation,
@@ -150,19 +149,23 @@ fun RandomWordScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CommonButton(
-                text = "Проверить\nответ",
+                text = "Проверить ответ",
                 onClick = { viewModel.checkAnswer() },
-                modifier = Modifier.weight(1f),
-                enabled = uiState.word != null && 
-                         uiState.userTranslation.isNotBlank() && 
-                         !uiState.isAnswerChecked,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(72.dp),
+                enabled = uiState.word != null &&
+                    uiState.userTranslation.isNotBlank() &&
+                    !uiState.isAnswerChecked,
                 type = ButtonType.Primary
             )
 
             CommonButton(
                 text = "Случайное\nслово",
                 onClick = { viewModel.loadNewWord() },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(72.dp),
                 type = ButtonType.Secondary
             )
         }
@@ -174,18 +177,22 @@ fun RandomWordScreen(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             CommonButton(
-                text = "Показать перевод",
+                text = "Показать\nперевод",
                 onClick = { viewModel.showConfirmDialog() },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(72.dp),
                 type = ButtonType.Secondary
             )
-            
+
             Spacer(modifier = Modifier.width(8.dp))
-            
+
             CommonButton(
                 text = "Пропустить",
                 onClick = { viewModel.showSkipConfirmDialog() },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(72.dp),
                 type = ButtonType.Tertiary
             )
         }
