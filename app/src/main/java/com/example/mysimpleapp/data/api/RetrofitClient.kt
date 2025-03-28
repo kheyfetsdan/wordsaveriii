@@ -13,6 +13,7 @@ object RetrofitClient {
     // Константы для разных окружений
     private const val EMULATOR_URL = "http://10.0.2.2:8080"
     private const val DEVICE_URL = "http://192.168.31.182:8080"
+    private const val PROD_URL = "http://wordsaveriii-e42ab50fe156.herokuapp.com"
     
     // Флаг для переключения между окружениями
     private var useEmulatorUrl = false
@@ -69,7 +70,7 @@ object RetrofitClient {
     
     private val retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(if (useEmulatorUrl) EMULATOR_URL else DEVICE_URL)
+            .baseUrl(if (useEmulatorUrl) EMULATOR_URL else PROD_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
