@@ -1,16 +1,6 @@
 package com.example.mysimpleapp.viewmodels
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.mysimpleapp.data.AppDatabase
-import com.example.mysimpleapp.data.TextEntity
-import com.example.mysimpleapp.data.api.RetrofitClient
-import com.example.mysimpleapp.data.api.model.SaveWordRequest
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.mysimpleapp.viewmodels.input.InputRepository

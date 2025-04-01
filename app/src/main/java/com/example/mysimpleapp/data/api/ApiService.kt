@@ -53,7 +53,7 @@ interface ApiService {
     suspend fun getWordById(
         @Header("Authorization") token: String,
         @Path("id") wordId: Int
-    ): Response<WordResponseRemote>
+    ): Response<WordResponse>
 
     @PUT("/word")
     suspend fun updateWord(

@@ -2,8 +2,6 @@ package com.example.mysimpleapp.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.mysimpleapp.data.AppDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +13,6 @@ data class SettingsUiState(
 )
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
-    private val database = AppDatabase.getDatabase(application)
     
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -34,12 +31,5 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun hideEasterEggDialog() {
         _uiState.value = _uiState.value.copy(showEasterEggDialog = false)
-    }
-
-    fun clearAllWords() {
-        viewModelScope.launch {
-            database.textDao().deleteAll()
-            hideClearDialog()
-        }
     }
 } 

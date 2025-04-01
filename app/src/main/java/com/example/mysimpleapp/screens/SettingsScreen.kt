@@ -28,7 +28,7 @@ fun SettingsScreen(
         CommonDialog(
             title = "Подтверждение",
             text = "Вы уверены, что хотите удалить все слова?",
-            onConfirm = { viewModel.clearAllWords() },
+            onConfirm = {  },
             onDismiss = { viewModel.hideClearDialog() }
         )
     }

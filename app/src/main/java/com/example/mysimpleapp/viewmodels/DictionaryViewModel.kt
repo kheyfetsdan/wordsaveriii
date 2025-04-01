@@ -110,16 +110,12 @@ class DictionaryViewModel(
         )
     }
     
-    private fun handleWordsResponse(response: retrofit2.Response<com.example.mysimpleapp.data.api.model.GetWordsResponse>) {
+    private fun handleWordsResponse(response: retrofit2.Response<GetWordsResponse>) {
         if (response.isSuccessful) {
             response.body()?.let { wordsResponse ->
-                // Конвертируем WordResponse в TextEntity
-                val words = wordsResponse.wordList.map { remoteWord ->
-                    dictionaryUseCase.mapWordResponseToTextEntity(remoteWord)
-                }
-                
+                // Используем напрямую данные из API без преобразования в TextEntity
                 updateState { it.copy(
-                    words = words,
+                    words = wordsResponse.wordList,
                     totalPages = dictionaryUseCase.calculateTotalPages(wordsResponse.total, pageSize),
                     error = null,
                     isLoading = false,

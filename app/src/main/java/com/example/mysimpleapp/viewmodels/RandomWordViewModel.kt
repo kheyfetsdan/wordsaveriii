@@ -1,17 +1,10 @@
 package com.example.mysimpleapp.viewmodels
 
 import android.app.Application
-import androidx.lifecycle.viewModelScope
-import com.example.mysimpleapp.data.AppDatabase
-import kotlinx.coroutines.launch
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.mysimpleapp.data.api.RetrofitClient
-import com.example.mysimpleapp.data.api.model.WordStatRequest
-import android.util.Log
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.Dispatchers
 import com.example.mysimpleapp.viewmodels.wordgame.WordGameState
 import com.example.mysimpleapp.viewmodels.wordgame.WordGameRepository
 import com.example.mysimpleapp.viewmodels.wordgame.WordGameUseCase

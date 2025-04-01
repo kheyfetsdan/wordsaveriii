@@ -99,10 +99,10 @@ fun DictionaryScreen(
                 ) {
                     items(uiState.words) { word ->
                         WordCard(
-                            word = word.text,
+                            word = word.word,
                             translation = word.translation,
-                            successRate = word.correctAnswers.toInt(),
-                            failureRate = word.wrongAnswers.toInt(),
+                            successRate = word.success.toInt(),
+                            failureRate = word.failed.toInt(),
                             modifier = Modifier.fillMaxWidth(),
                             onClick = { onNavigateToWordDetails(word.id) }
                         )

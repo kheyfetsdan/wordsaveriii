@@ -3,8 +3,6 @@ package com.example.mysimpleapp.viewmodels
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mysimpleapp.data.AppDatabase
-import com.example.mysimpleapp.data.TextEntity
 import com.example.mysimpleapp.data.api.model.QuizRequest
 import com.example.mysimpleapp.data.api.model.WordStatRequest
 import com.example.mysimpleapp.data.api.RetrofitClient

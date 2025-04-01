@@ -19,6 +19,7 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.filled.Delete
+import com.example.mysimpleapp.data.api.model.WordResponse
 
 @Composable
 fun WordDetailsScreen(
@@ -61,11 +62,20 @@ fun WordDetailsScreen(
 
             if (uiState.isLoading) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
+            } else if (uiState.error != null) {
+                Text(
+                    text = uiState.error!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
             } else {
                 uiState.word?.let { word ->
                     // Карточка со словом
@@ -120,12 +130,12 @@ fun WordDetailsScreen(
                                     Row {
                                         Column {
                                             Text(
-                                                text = word.text,
+                                                text = (word as? WordResponse)?.word ?: "",
                                                 style = MaterialTheme.typography.headlineMedium,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
-                                                text = word.translation,
+                                                text = (word as? WordResponse)?.translation ?: "",
                                                 style = MaterialTheme.typography.titleLarge,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -158,27 +168,18 @@ fun WordDetailsScreen(
                                 ) {
                                     StatisticItem(
                                         title = "Правильные ответы",
-                                        value = "${word.correctAnswers}",
+                                        value = "${(word as? WordResponse)?.success?.times(100)}",
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     StatisticItem(
                                         title = "Неправильные ответы",
-                                        value = "${word.wrongAnswers}",
+                                        value = "${(word as? WordResponse)?.failed?.times(100)}",
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
                             }
                         }
                     }
-                }
-
-                if (uiState.error != null) {
-                    Text(
-                        text = uiState.error!!,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
                 }
             }
         }

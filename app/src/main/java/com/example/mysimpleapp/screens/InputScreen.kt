@@ -14,9 +14,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.key.*
-import com.example.mysimpleapp.data.AppDatabase
-import com.example.mysimpleapp.data.TextEntity
-import kotlinx.coroutines.launch
 import com.example.mysimpleapp.components.CommonButton
 import com.example.mysimpleapp.components.ButtonType
 import com.example.mysimpleapp.components.CommonTextField
@@ -24,8 +21,6 @@ import com.example.mysimpleapp.components.CommonCard
 import com.example.mysimpleapp.viewmodels.InputViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.app.Application
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.text.style.TextAlign
 import com.example.mysimpleapp.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalComposeUiApi::class)
